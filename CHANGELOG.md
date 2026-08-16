@@ -6,7 +6,8 @@ Versions follow the MCP server in `package.json` / `src/index.ts`. The Studio pl
 
 ### Added
 
-- CLI one-liners: `npx robridge init` (plugin + MCP snippets), `install-plugin`, `mcp` (print configs only). Empty `node dist/index.js` still starts the stdio MCP server.
+- Dummy-proof `npx robridge init` / `install`: Node 18+ check, build if `dist/index.js` is missing, copy the Studio plugin, and **write** Cursor + Claude MCP configs (merge, never wipe other servers). Uses `process.execPath` so GUI apps can spawn Node.
+- `npx robridge mcp` writes the same configs (no plugin). `install-plugin` remains plugin-only. Empty argv still starts the stdio MCP server.
 
 ## [0.1.6] — 2026-08-16
 

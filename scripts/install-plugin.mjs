@@ -25,4 +25,4 @@ const dest = path.join(dir, "RoBridge.lua");
 await copyFile(src, dest);
 await access(dest);
 console.log(`Installed RoBridge plugin to: ${dest}`);
-console.log("Restart Roblox Studio (or right-click the Plugins folder in Studio > Refresh) to load it.");
+console.log("Refresh Plugins in Studio (or restart Studio).");

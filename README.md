@@ -35,7 +35,7 @@ Clone this repo, then install, build, and init (see **First run**).
 
 ## Works with
 
-Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). Same spawn: `node` + absolute path to `dist/index.js` (empty argv — no subcommands). Config files and reload notes: [docs/mcp.md](docs/mcp.md).
+Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). `npx robridge init` writes the spawn config (absolute Node binary + absolute `dist/index.js`, empty argv). Details: [docs/mcp.md](docs/mcp.md).
 
 ## First run
 
@@ -43,9 +43,9 @@ Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, 
 npm install && npm run build && npx robridge init
 ```
 
-That copies the Studio plugin into the Roblox Plugins folder and prints MCP spawn snippets. Plugin only: `npx robridge install-plugin`. Snippets only (does not start the server): `npx robridge mcp`.
+That copies the Studio plugin into the Roblox Plugins folder **and writes** Cursor / Claude MCP configs (merge — other servers are kept). Plugin only: `npx robridge install-plugin`. Configs only: `npx robridge mcp`.
 
-Then restart Roblox Studio (or refresh Plugins), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**.
+Then **refresh Plugins in Studio** (or restart Studio), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**. Reload MCP in Cursor (Settings → MCP). Fully quit Claude Desktop if you use it. Clients spawn the server; you do not start it in a terminal.
 
 Plugin destination:
 
@@ -54,28 +54,9 @@ Plugin destination:
 | macOS | `~/Documents/Roblox/Plugins/RoBridge.lua` |
 | Windows | `%LOCALAPPDATA%\Roblox\Plugins\RoBridge.lua` |
 
-Claude Code:
+Unusual clients that cannot be auto-configured: [MCP setup](docs/mcp.md) (fallback JSON). Reload the MCP server after each rebuild (`npx robridge mcp` updates paths). Claude Desktop: fully quit and reopen.
 
-```bash
-claude mcp add --scope user RoBridge -- node /absolute/path/to/RoBridge/dist/index.js
-```
-
-Cursor / Claude Desktop — `~/.cursor/mcp.json` (absolute path):
-
-```json
-{
-  "mcpServers": {
-    "RoBridge": {
-      "command": "node",
-      "args": ["/absolute/path/to/RoBridge/dist/index.js"]
-    }
-  }
-}
-```
-
-`npx robridge mcp` prints these blocks with your real path. Other clients: [MCP setup](docs/mcp.md). Reload the MCP server after each rebuild. Claude Desktop: fully quit and reopen.
-
-Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only: `node dist/index.js --no-mcp`.
+Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only (you run this yourself): `node dist/index.js --no-mcp`.
 
 One process owns `:3737`. Extra MCP clients (Cursor + Claude together) **forward** to that owner and share the same Studio session.
 

@@ -37,7 +37,7 @@ Rebuild (`npm run build`) and restart the RoBridge MCP server in the client so `
 
 ## Claude Desktop / Claude Code fails to connect
 
-Stdout must be JSON-RPC only. RoBridge logs to stderr; do not add `--dump-catalog` or `--no-mcp` to the client spawn. GUI apps often lack `node` on `PATH` — use the absolute Node binary (`which node` / `where.exe node`). Claude Desktop logs: macOS `~/Library/Logs/Claude/mcp-server-RoBridge.log`.
+Stdout must be JSON-RPC only. RoBridge logs to stderr; do not add `--dump-catalog` or `--no-mcp` to the client spawn. `npx robridge init` writes the absolute Node binary (`process.execPath`) so GUI apps do not need `node` on `PATH`. Re-run `npx robridge mcp` after a rebuild. Claude Desktop logs: macOS `~/Library/Logs/Claude/mcp-server-RoBridge.log`.
 
 ## Two clients, one Studio
 
