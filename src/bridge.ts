@@ -37,14 +37,73 @@ interface ParkedPoller {
 
 const SESSION_STALE_MS = 45_000;
 const SESSION_LIVE_MS = 8_000;
-const DISCONNECTED_KEEP_MS = 10 * 60_000;
+/** Disconnected rows are for a brief "just left" hint, not a 10-minute ghost list. */
+const DISCONNECTED_KEEP_MS = 90_000;
 const DEFAULT_JOB_TIMEOUT_MS = 30_000;
 /** Keep under Studio HttpService's ~20–30s read timeout so idle polls are not Timedout. */
 const LONG_POLL_MS = 12_000;
 const PLAY_POLL_MS = 4_000;
 
-function isPlayAgent(info: { mode?: string; pluginVersion?: string } | undefined) {
-  return (info?.pluginVersion ?? "").startsWith("play-");
+function isPlayAgent(info: { mode?: string; pluginVersion?: string; playAgent?: boolean } | undefined) {
+  return !!(info?.playAgent || (info?.pluginVersion ?? "").startsWith("play-"));
+}
+
+function isGenericPlaceName(name: string | undefined) {
+  const n = (name ?? "").trim().toLowerCase();
+  return !n || n === "game" || n === "unknown place";
+}
+
+/** Group key for the dashboard list. Unpublished (placeId 0) stay unique by session. */
+export function placeListKey(s: { placeId?: number | string | null; sessionId: string }) {
+  if (s.placeId === undefined || s.placeId === null || s.placeId === "") return `session:${s.sessionId}`;
+  const key = String(s.placeId);
+  if (key === "0") return `session:${s.sessionId}`;
+  return key;
+}
+
+type ListableSession = {
+  sessionId: string;
+  placeId?: number | string | null;
+  placeName?: string;
+  connected?: boolean;
+  lastSeen?: number;
+  playAgent?: boolean;
+  pluginVersion?: string;
+  mode?: string;
+};
+
+/**
+ * One dashboard row per placeId.
+ * Prefer connected, then edit over play-agent, then most recently seen.
+ * Play DataModel name "Game" yields to a real edit place name when one exists.
+ */
+export function collapseSessionsByPlace<T extends ListableSession>(sessions: T[]): T[] {
+  const groups = new Map<string, T[]>();
+  for (const s of sessions) {
+    const key = placeListKey(s);
+    const g = groups.get(key);
+    if (g) g.push(s);
+    else groups.set(key, [s]);
+  }
+  const out: T[] = [];
+  for (const group of groups.values()) {
+    const live = group.filter((s) => s.connected === true);
+    const pool = live.length ? live : group;
+    pool.sort((a, b) => {
+      const aPlay = isPlayAgent(a);
+      const bPlay = isPlayAgent(b);
+      if (aPlay !== bPlay) return aPlay ? 1 : -1;
+      return (b.lastSeen ?? 0) - (a.lastSeen ?? 0);
+    });
+    const winner = { ...pool[0] };
+    const namedEdit = group.find((s) => !isPlayAgent(s) && !isGenericPlaceName(s.placeName));
+    const named = namedEdit ?? group.find((s) => !isGenericPlaceName(s.placeName));
+    if (named?.placeName) winner.placeName = named.placeName;
+    out.push(winner);
+  }
+  return out.sort(
+    (a, b) => Number(!!b.connected) - Number(!!a.connected) || (b.lastSeen ?? 0) - (a.lastSeen ?? 0)
+  );
 }
 
 function versionRank(v: string | undefined): number {
@@ -81,11 +140,17 @@ export class Bridge {
     for (const [id, s] of this.sessions) {
       if (now - s.lastSeen > SESSION_STALE_MS && !this.isSessionPolling(id)) {
         this.sessions.delete(id);
-        this.disconnected.set(id, s);
+        // Play agents mint a new GUID every Play — never keep them as list ghosts.
+        if (!isPlayAgent(s)) this.disconnected.set(id, s);
       }
     }
+    const livePlaceIds = new Set(
+      [...this.sessions.values()].filter((s) => s.placeId).map((s) => String(s.placeId))
+    );
     for (const [id, s] of this.disconnected) {
-      if (now - s.lastSeen > DISCONNECTED_KEEP_MS) this.disconnected.delete(id);
+      if (isPlayAgent(s)) this.disconnected.delete(id);
+      else if (now - s.lastSeen > DISCONNECTED_KEEP_MS) this.disconnected.delete(id);
+      else if (s.placeId && livePlaceIds.has(String(s.placeId))) this.disconnected.delete(id);
     }
   }
 
@@ -147,10 +212,7 @@ export class Bridge {
 
   dropPlaySessions() {
     for (const [id, s] of this.sessions) {
-      if (isPlayAgent(s)) {
-        this.sessions.delete(id);
-        this.disconnected.set(id, s);
-      }
+      if (isPlayAgent(s)) this.sessions.delete(id);
     }
     for (const p of this.pollersPlay) clearTimeout(p.timer);
     this.pollersPlay = [];
@@ -334,7 +396,6 @@ export class Bridge {
         if (this.isSessionLive(s, now)) continue;
         if (incomingRank >= versionRank(s.pluginVersion)) {
           this.sessions.delete(id);
-          this.disconnected.set(id, s);
         }
       }
     }
@@ -353,7 +414,7 @@ export class Bridge {
       if (seen.has(s.sessionId)) continue;
       out.push(this.snapshot(s, false, now));
     }
-    return out.sort((a, b) => Number(b.connected) - Number(a.connected) || b.lastSeen - a.lastSeen);
+    return collapseSessionsByPlace(out);
   }
 
   stats() {

@@ -50,6 +50,50 @@ function liveSessions(sessions) {
   return (sessions || []).filter((x) => x.connected === true);
 }
 
+function isPlayListed(x) {
+  return !!(x && (x.playAgent || String(x.pluginVersion || "").startsWith("play-")));
+}
+
+function isGenericPlaceName(name) {
+  const n = String(name || "").trim().toLowerCase();
+  return !n || n === "game" || n === "unknown place";
+}
+
+function placeListKey(s) {
+  if (s.placeId === undefined || s.placeId === null || s.placeId === "") return `session:${s.sessionId || ""}`;
+  const key = String(s.placeId);
+  if (key === "0") return `session:${s.sessionId || ""}`;
+  return key;
+}
+
+/** One Studio-sessions row per placeId. Play agents piggyback the edit session. */
+function listedSessions(sessions) {
+  const groups = new Map();
+  for (const s of sessions || []) {
+    const key = placeListKey(s);
+    const g = groups.get(key);
+    if (g) g.push(s);
+    else groups.set(key, [s]);
+  }
+  const out = [];
+  for (const group of groups.values()) {
+    const live = group.filter((x) => x.connected === true);
+    const pool = live.length ? live : group;
+    pool.sort((a, b) => {
+      const aPlay = isPlayListed(a);
+      const bPlay = isPlayListed(b);
+      if (aPlay !== bPlay) return aPlay ? 1 : -1;
+      return (b.lastSeen || 0) - (a.lastSeen || 0);
+    });
+    const winner = { ...pool[0] };
+    const namedEdit = group.find((x) => !isPlayListed(x) && !isGenericPlaceName(x.placeName));
+    const named = namedEdit || group.find((x) => !isGenericPlaceName(x.placeName));
+    if (named && named.placeName) winner.placeName = named.placeName;
+    out.push(winner);
+  }
+  return out.sort((a, b) => Number(!!b.connected) - Number(!!a.connected) || (b.lastSeen || 0) - (a.lastSeen || 0));
+}
+
 function hasLiveStudio(s) {
   if (s && s.studioConnected) return true;
   return liveSessions((s && s.bridge && s.bridge.sessions) || []).length > 0;
@@ -250,7 +294,8 @@ function renderPreflight(s) {
 }
 
 function renderSessions(sessions) {
-  $("#session-cards").innerHTML = sessions
+  const rows = listedSessions(sessions);
+  $("#session-cards").innerHTML = rows
     .map((x) => {
       const modeClass = x.connected ? (x.mode === "play" || x.mode === "run" || x.playAgent ? "play" : "edit") : "disconnected";
       const status = x.connected ? "connected" : "disconnected";
@@ -269,10 +314,10 @@ function renderSessions(sessions) {
       </article>`;
     })
     .join("");
-  $("#sessions-empty").style.display = sessions.length ? "none" : "";
-  const liveN = sessions.filter((x) => x.connected).length;
-  $("#session-count-note").textContent = sessions.length
-    ? `${liveN} connected · ${sessions.length} listed`
+  $("#sessions-empty").style.display = rows.length ? "none" : "";
+  const liveN = rows.filter((x) => x.connected).length;
+  $("#session-count-note").textContent = rows.length
+    ? `${liveN} connected · ${rows.length} listed`
     : "";
 }
 
@@ -397,7 +442,7 @@ async function refreshStatus() {
     ovStudio.textContent = live.length ? String(live.length) : "0";
     ovStudio.className = "card-value " + (connected ? "ok" : "err");
     $("#ov-studio-hint").textContent = connected
-      ? `${live.filter((x) => !x.playAgent).length} edit · ${live.filter((x) => x.playAgent).length} play`
+      ? `${live.filter((x) => !x.playAgent).length} edit · ${play ? 1 : 0} play`
       : "Waiting for plugin";
 
     const pluginVer = live.find((x) => !x.playAgent)?.pluginVersion || sessions.find((x) => !x.playAgent)?.pluginVersion;
