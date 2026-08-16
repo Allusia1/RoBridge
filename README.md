@@ -8,6 +8,8 @@
 
 A free, open, **local** MCP server that lets AI agents (Cursor, Claude, any MCP client) drive **Roblox Studio** — DataModel, scripts, terrain, lighting, UI, and playtests — plus a dashboard at [http://127.0.0.1:3737](http://127.0.0.1:3737). All tools included. No Pro tier.
 
+Public MIT: fork for your own version, PRs welcome; `main` is maintained by LeapVerse/Allusia1.
+
 ```mermaid
 flowchart LR
   A["AI agent<br/>MCP stdio"] --> B["RoBridge server<br/>:3737"]
