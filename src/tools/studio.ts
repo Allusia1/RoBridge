@@ -290,7 +290,7 @@ error("Unknown action: " .. tostring(A.action))
   defineTool(
     ctx,
     "manage_input",
-    "Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks like crates), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.",
+    "Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.",
     {
       action: z.enum(["click_at", "click_path", "key", "type_text", "walk_to", "click_world", "walk_and_click"]),
       path: z.string().optional().describe("3D instance (walk_to/click_world) or GuiButton (click_path)"),
@@ -977,7 +977,7 @@ return { placeName = game.Name, scripts = out }
       assetType: z
         .enum(["Model", "Decal", "Audio", "Mesh", "Plugin"])
         .optional()
-        .describe("Toolbox category. Model=props/crates, Audio=Sounds, Decal=images, Mesh=MeshParts"),
+        .describe("Toolbox category. Model=props, Audio=Sounds, Decal=images, Mesh=MeshParts"),
       limit: z.number().optional().describe("Max search results (default 10, max 30). Alias: maxResults"),
       maxResults: z.number().optional().describe("Alias for limit"),
       assetId: z

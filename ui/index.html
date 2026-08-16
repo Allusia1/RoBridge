@@ -82,7 +82,22 @@
           </div>
         </div>
 
-        <div class="topology" id="topology" aria-label="Connection topology"></div>
+        <div class="first-run" id="first-run" role="status" aria-live="polite">
+          <div class="first-run-kicker">First run · Studio not connected</div>
+          <h2 class="first-run-title">Open Studio → Allow HTTP to 127.0.0.1 → refresh Plugins</h2>
+          <p class="first-run-copy">
+            Install the plugin with <code>npm install</code> / <code>npx robridge init</code>.
+            In Studio, click the toolbar button <strong>RoBridge</strong>.
+            Click Allow if Studio asks for HTTP to <code>127.0.0.1</code>.
+            This page will then show the live topology.
+          </p>
+          <ol class="first-run-steps">
+            <li><span class="first-run-num">1</span><span>Open Studio</span></li>
+            <li><span class="first-run-num">2</span><span>Allow HTTP to 127.0.0.1</span></li>
+            <li><span class="first-run-num">3</span><span>Refresh Plugins</span></li>
+          </ol>
+        </div>
+        <div class="topology" id="topology" hidden aria-label="Connection topology"></div>
 
         <div class="cards">
           <div class="card">

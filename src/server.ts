@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import type { Bridge } from "./bridge.js";
 import { compactFixes, withErrorHint } from "./errors.js";
 import type { History } from "./history.js";
-import { catalogPayload, type ToolContext } from "./tools/helpers.js";
+import { catalogPayload, mcpClientState, type ToolContext } from "./tools/helpers.js";
+import { cursorMcpPresence } from "./cli.js";
 import {
   addRecordingFrame,
   addScreenshotTile,
@@ -96,9 +97,8 @@ export function createHttpApp(ctx: ToolContext, bridge: Bridge, history: History
     const editSession = live.find((s) => !s.playAgent) ?? sessions.find((s) => !s.playAgent);
     const preflight = editSession?.preflight ?? live[0]?.preflight ?? sessions[0]?.preflight;
     const mcp = ctx.config.mcp;
-    const proxyFresh =
-      mcp.lastClientSource === "proxy" && mcp.lastClientAt != null && Date.now() - mcp.lastClientAt < 180_000;
-    const mcpClientConnected = mcp.stdioConnected || proxyFresh;
+    const presence = mcpClientState(mcp);
+    const cursorConfig = cursorMcpPresence();
     res.json({
       name: "RoBridge",
       version: ctx.config.version,
@@ -117,17 +117,13 @@ export function createHttpApp(ctx: ToolContext, bridge: Bridge, history: History
       mcp: {
         transport: mcp.transport,
         stdioConnected: mcp.stdioConnected,
-        clientConnected: mcpClientConnected,
+        clientConnected: presence.clientConnected,
         lastClientAt: mcp.lastClientAt,
         lastClientSource: mcp.lastClientSource,
+        lastHeartbeatAt: mcp.lastHeartbeatAt,
         proxyCalls: mcp.proxyCalls,
-        label: mcp.stdioConnected
-          ? "stdio"
-          : proxyFresh
-            ? "http-proxy"
-            : mcp.transport === "none"
-              ? "dashboard-only"
-              : "idle",
+        label: presence.label,
+        cursorConfig,
       },
       history: history.summary(),
       bridge: bridge.stats(),
@@ -316,6 +312,13 @@ export function createHttpApp(ctx: ToolContext, bridge: Bridge, history: History
     } finally {
       ctx.callSource = undefined;
     }
+  });
+
+  // Forwarded stdio MCP (Cursor spawn that lost :3737) announces itself here.
+  app.post("/api/mcp/heartbeat", (_req, res) => {
+    ctx.config.mcp.lastHeartbeatAt = Date.now();
+    if (ctx.config.mcp.lastClientSource == null) ctx.config.mcp.lastClientSource = "heartbeat";
+    res.json({ ok: true });
   });
 
   // ---- Static dashboard ----

@@ -2,7 +2,7 @@
   "generatedAt": "2026-08-16T17:39:53.239Z",
   "serverVersion": "0.1.6",
   "packageVersion": "0.1.6",
-  "pluginVersion": "0.1.8",
+  "pluginVersion": "0.1.9",
   "toolCount": 24,
   "tools": [
     {
@@ -1498,7 +1498,7 @@
             "Mesh",
             "Plugin"
           ],
-          "description": "Toolbox category. Model=props/crates, Audio=Sounds, Decal=images, Mesh=MeshParts"
+          "description": "Toolbox category. Model=props, Audio=Sounds, Decal=images, Mesh=MeshParts"
         },
         {
           "name": "limit",
@@ -1648,7 +1648,7 @@
     },
     {
       "name": "manage_input",
-      "description": "Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks like crates), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.",
+      "description": "Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.",
       "file": "studio.ts",
       "group": "Studio",
       "groupOrder": 3,

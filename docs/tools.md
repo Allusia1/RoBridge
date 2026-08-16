@@ -1,6 +1,6 @@
 # Tools
 
-24 tools from `defineTool` in `src/tools`. Server **0.1.6**, plugin **0.1.8**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
+24 tools from `defineTool` in `src/tools`. Server **0.1.6**, plugin **0.1.9**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
 
 Regenerate this page: `node scripts/extract-tool-catalog.mjs`.
 
@@ -351,7 +351,7 @@ Roblox Toolbox/Creator Store assets plus a local asset library. ALWAYS search fi
 | `action` | `enum` | required | search first, then insert/preview with an assetId from results |
 | `keyword` | `string` | optional | Toolbox search text (required for search). Alias: query |
 | `query` | `string` | optional | Alias for keyword |
-| `assetType` | `enum (Model \| Decal \| Audio \| Mesh \| Plugin)` | optional | Toolbox category. Model=props/crates, Audio=Sounds, Decal=images, Mesh=MeshParts |
+| `assetType` | `enum (Model \| Decal \| Audio \| Mesh \| Plugin)` | optional | Toolbox category. Model=props, Audio=Sounds, Decal=images, Mesh=MeshParts |
 | `limit` | `number` | optional | Max search results (default 10, max 30). Alias: maxResults |
 | `maxResults` | `number` | optional | Alias for limit |
 | `assetId` | `unknown` | optional | Toolbox asset id from a search/preview result. Do not invent this. |
@@ -380,7 +380,7 @@ Roblox Toolbox/Creator Store assets plus a local asset library. ALWAYS search fi
 
 `studio.ts`
 
-Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks like crates), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.
+Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.
 
 `click_at` · `click_path` · `key` · `type_text` · `walk_to` · `click_world` · `walk_and_click`
 

@@ -175,6 +175,92 @@ h2 { font-size: 13px; font-weight: 600; color: var(--text); }
 .card-value.play { color: var(--accent); }
 .card-hint { margin-top: 6px; color: var(--text-mute); font-size: 12px; }
 
+/* ---- First run (no Studio) ---- */
+.first-run {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid rgba(193, 122, 74, 0.48);
+  border-radius: var(--radius);
+  padding: 32px 36px 30px 40px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.first-run::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--accent);
+}
+.first-run-kicker {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.first-run-title {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.22;
+  color: var(--text);
+  margin: 10px 0 14px;
+  max-width: 22em;
+}
+.first-run-copy {
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 46em;
+}
+.first-run-copy code {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.first-run-copy strong { color: var(--text); font-weight: 650; }
+.first-run-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin-top: 22px;
+}
+.first-run-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid rgba(193, 122, 74, 0.32);
+  border-radius: 999px;
+  padding: 8px 14px 8px 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+}
+.first-run-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  border: 1px solid rgba(193, 122, 74, 0.45);
+  color: var(--accent);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 650;
+}
+.first-run[hidden],
+.topology[hidden] {
+  display: none !important;
+}
+
 /* ---- Topology ---- */
 .topology {
   background: var(--bg-card);

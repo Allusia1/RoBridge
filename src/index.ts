@@ -17,6 +17,25 @@ const VERSION = "0.1.6";
 const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
 const ARGV = process.argv.slice(2);
 
+/** Tell the :3737 owner that a forwarded stdio MCP client is alive (Cursor, Claude, …). */
+function startOwnerHeartbeat(port: number) {
+  const beat = async () => {
+    try {
+      await fetch(`http://127.0.0.1:${port}/api/mcp/heartbeat`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-robridge-proxy": "1" },
+        body: JSON.stringify({ pid: process.pid }),
+        signal: AbortSignal.timeout(2000),
+      });
+    } catch {
+      /* owner down or restarting */
+    }
+  };
+  void beat();
+  const timer = setInterval(() => void beat(), 10_000);
+  timer.unref();
+}
+
 async function main() {
   // Subcommands print to stdout and exit. Empty / unknown argv starts MCP (client spawn).
   if (isCliCommand(ARGV)) {
@@ -55,6 +74,7 @@ async function main() {
         lastClientAt: null,
         lastClientSource: null,
         proxyCalls: 0,
+        lastHeartbeatAt: null,
       },
     },
   };
@@ -97,6 +117,9 @@ async function main() {
     // Do not send tools/list_changed here — that notification before initialize
     // breaks Claude Desktop / Claude Code. tools/list after handshake is enough.
     log(`MCP server connected via stdio (${ctx.registry.size} tools)`);
+    if (!ctx.config.httpBound) {
+      startOwnerHeartbeat(PORT);
+    }
   } else {
     log("Running in HTTP-only mode (--no-mcp)");
   }

@@ -11,3 +11,5 @@ web/
 .DS_Store
 .cursor/*
 !.cursor/rules/
+.vscode/mcp.json
+.vscode/mcp.json.bak

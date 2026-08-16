@@ -17,8 +17,32 @@ export interface McpRuntime {
   transport: "stdio" | "none";
   stdioConnected: boolean;
   lastClientAt: number | null;
-  lastClientSource: "stdio" | "proxy" | null;
+  lastClientSource: "stdio" | "proxy" | "heartbeat" | null;
   proxyCalls: number;
+  lastHeartbeatAt: number | null;
+}
+
+/** Proxied tool calls keep the dashboard "attached" for this long. */
+export const MCP_PROXY_FRESH_MS = 180_000;
+/** Forwarded stdio MCP heartbeats (every 10s) expire after this. */
+export const MCP_HEARTBEAT_FRESH_MS = 30_000;
+
+export function mcpClientState(mcp: McpRuntime, now = Date.now()) {
+  const heartbeatFresh =
+    mcp.lastHeartbeatAt != null && now - mcp.lastHeartbeatAt < MCP_HEARTBEAT_FRESH_MS;
+  const proxyFresh =
+    mcp.lastClientSource === "proxy" &&
+    mcp.lastClientAt != null &&
+    now - mcp.lastClientAt < MCP_PROXY_FRESH_MS;
+  const clientConnected = mcp.stdioConnected || proxyFresh || heartbeatFresh;
+  const label = mcp.stdioConnected
+    ? "stdio"
+    : heartbeatFresh || proxyFresh
+      ? "http-proxy"
+      : mcp.transport === "none"
+        ? "dashboard-only"
+        : "idle";
+  return { clientConnected, heartbeatFresh, proxyFresh, label };
 }
 
 export type CallSource = "mcp" | "dashboard" | "proxy";

@@ -28,6 +28,5 @@ One in-flight screenshot/record. Effective capture rate is often ~1.5–2 fps ev
 
 ## What this project is not
 
-- Not a published crate / RNG experience. The MCP product is the bridge.
 - Not a VS Code Roblox explorer extension.
 - Not a paid Pro tier with gated tools.

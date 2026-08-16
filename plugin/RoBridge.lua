@@ -3,7 +3,7 @@
 -- Long-polls the local RoBridge server (http://127.0.0.1:3737) for Luau jobs,
 -- executes them at plugin security level, and posts results back.
 
-local VERSION = "0.1.8"
+local VERSION = "0.1.9"
 
 local HttpService = game:GetService("HttpService")
 local CollectionService = game:GetService("CollectionService")
@@ -615,6 +615,7 @@ end)
 -- HTTP bridge
 --------------------------------------------------------------------
 local connected = false
+local pollGeneration = 0
 local pendingPlay = nil
 local playAgentConfig = nil
 
@@ -1060,9 +1061,24 @@ local function postResult(jobId, ok, result, err)
 	pcall(request, "/api/plugin/result", payload)
 end
 
+local function isTransientPollError(err)
+	local s = string.lower(tostring(err or ""))
+	-- Studio HttpService times out around the long-poll window; that is idle, not a drop.
+	if string.find(s, "timedout", 1, true) then
+		return true
+	end
+	if string.find(s, "timed out", 1, true) then
+		return true
+	end
+	if string.find(s, "timeout", 1, true) then
+		return true
+	end
+	return false
+end
+
 local function pollOnce()
 	if RunService:IsRunning() or not RunService:IsEdit() then
-		return false
+		return "skip"
 	end
 	local ok, res = pcall(request, "/api/plugin/poll", {
 		sessionId = SESSION_ID,
@@ -1073,12 +1089,21 @@ local function pollOnce()
 		pluginVersion = VERSION,
 		preflight = currentPreflight(),
 	})
-	if not ok or not res.Success then
-		return false
+	if not ok then
+		if isTransientPollError(res) then
+			return "idle"
+		end
+		return "error"
+	end
+	if not res.Success then
+		if res.StatusCode == 0 or res.StatusCode == 408 then
+			return "idle"
+		end
+		return "error"
 	end
 	local decodeOk, body = pcall(HttpService.JSONDecode, HttpService, res.Body)
 	if not decodeOk or type(body) ~= "table" then
-		return false
+		return "error"
 	end
 	local job = body.job
 	if job then
@@ -1087,19 +1112,21 @@ local function pollOnce()
 			postResult(job.id, jobOk, result, jobErr)
 		end)
 	end
-	return true
+	return "ok"
 end
 
-local function pollLoop()
+local function pollLoop(gen)
 	local announced = false
-	while connected do
-		local ok = pollOnce()
-		if ok then
+	while connected and pollGeneration == gen do
+		local status = pollOnce()
+		if status == "ok" then
 			if not announced then
 				print(("[RoBridge] Connected to %s (session %s)"):format(BASE_URL, string.sub(SESSION_ID, 1, 8)))
 				announced = true
 			end
-		else
+		elseif status == "idle" then
+			-- Expected long-poll timeout; stay connected and poll again.
+		elseif status == "error" then
 			if announced then
 				warn("[RoBridge] Lost connection to " .. BASE_URL .. " — retrying...")
 				announced = false
@@ -1125,8 +1152,12 @@ local function setConnected(v)
 	connected = v
 	button:SetActive(v)
 	plugin:SetSetting("RoBridgeAutoConnect", v)
+	pollGeneration += 1
 	if v then
-		task.spawn(pollLoop)
+		local gen = pollGeneration
+		task.spawn(function()
+			pollLoop(gen)
+		end)
 	else
 		print("[RoBridge] Disconnected")
 		RB.state.recording = false
@@ -1147,6 +1178,7 @@ stripIfEdit()
 
 plugin.Unloading:Connect(function()
 	connected = false
+	pollGeneration += 1
 	RB.state.recording = false
 	RB.stripIds()
 	stripIfEdit()

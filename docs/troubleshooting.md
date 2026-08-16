@@ -39,6 +39,12 @@ Rebuild (`npm run build`) and restart the RoBridge MCP server in the client so `
 
 Stdout must be JSON-RPC only. RoBridge logs to stderr; do not add `--dump-catalog` or `--no-mcp` to the client spawn. `npx robridge init` writes the absolute Node binary (`process.execPath`) so GUI apps do not need `node` on `PATH`. Re-run `npx robridge mcp` after a rebuild. Claude Desktop logs: macOS `~/Library/Logs/Claude/mcp-server-RoBridge.log`.
 
+## Official Roblox Studio MCP vs RoBridge
+
+Studio **Assistant → … → Manage MCP Servers → Enable Studio as MCP server** is Roblox’s **built-in** MCP (`Roblox_Studio` / `StudioMCP`). It does **not** use port 3737 and is **not** required for RoBridge.
+
+If Cursor/Claude tools look like `script_read` / `search_game_tree` instead of `query_instances` / `manage_scripts`, the client is talking to official MCP. Keep `mcpServers.RoBridge` pointing at Node + `dist/index.js`. Re-run `npx robridge init`. Both servers can be listed at once; init merge will not delete `Roblox_Studio`.
+
 ## Two clients, one Studio
 
 Expected. The first process owns `:3737`; the second forwards to it. Both share the plugin session. Stop the owner if the dashboard looks stale.

@@ -50,6 +50,20 @@ function liveSessions(sessions) {
   return (sessions || []).filter((x) => x.connected === true);
 }
 
+function hasLiveStudio(s) {
+  if (s && s.studioConnected) return true;
+  return liveSessions((s && s.bridge && s.bridge.sessions) || []).length > 0;
+}
+
+function renderOverviewHero(s, online = true) {
+  const topo = $("#topology");
+  const first = $("#first-run");
+  const studioLive = hasLiveStudio(s);
+  if (first) first.hidden = studioLive;
+  if (topo) topo.hidden = !studioLive;
+  if (studioLive) renderTopology(s, online);
+}
+
 function fmtTopoAgo(ms) {
   if (ms == null || Number.isNaN(ms)) return "—";
   const s = Math.max(0, Math.round(ms / 1000));
@@ -62,8 +76,7 @@ const ICON_ROBOT = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rec
 const ICON_MONITOR = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3.5" width="14" height="10" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M7 16.5h6M10 13.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 const ICON_SERVER = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="3" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="9.3" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="15.6" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><circle cx="7.8" cy="5.7" r="0.85" fill="currentColor"/><circle cx="7.8" cy="12" r="0.85" fill="currentColor"/><circle cx="7.8" cy="18.3" r="0.85" fill="currentColor"/></svg>`;
 
-function agentName(mcp) {
-  if (mcp.label === "http-proxy") return "MCP client";
+function agentName() {
   return "Cursor";
 }
 
@@ -143,19 +156,20 @@ function renderTopology(s, online = true) {
   const mcp = s.mcp || {};
   const live = liveSessions((s.bridge && s.bridge.sessions) || []);
   const mcpOn = online && !!mcp.clientConnected;
-  const agentLabel = agentName(mcp);
+  const agentLabel = agentName();
+  const cursorCfg = mcp.cursorConfig || {};
   const lastClientAgo =
     mcp.lastClientAt != null ? fmtTopoAgo(Date.now() - mcp.lastClientAt) : null;
   const agentMeta = mcpOn
     ? lastClientAgo
       ? `Last activity ${lastClientAgo}`
       : mcp.label === "http-proxy"
-        ? "HTTP proxy · live"
+        ? "forwarded MCP · attached"
         : "stdio · connected"
-    : mcp.label === "dashboard-only"
-      ? "not attached"
-      : lastClientAgo
-        ? `Last activity ${lastClientAgo}`
+    : cursorCfg.present
+      ? "No MCP client calling tools"
+      : cursorCfg.present === false
+        ? "Cursor config missing"
         : "not attached";
 
   const agentCard = `<article class="topo-card${mcpOn ? " on" : ""}" data-topo="agent">
@@ -403,7 +417,7 @@ async function refreshStatus() {
       modeEl.className = "mode-badge offline";
     }
 
-    renderTopology(s);
+    renderOverviewHero(s);
     renderPreflight(s);
     renderSessions(sessions);
   } catch {
@@ -414,7 +428,7 @@ async function refreshStatus() {
     $("#top-mode").textContent = "offline";
     $("#top-mode").className = "mode-badge offline";
     $("#top-place").textContent = "—";
-    renderTopology({ version: "—", port: "—", mcp: {}, bridge: { sessions: [] } }, false);
+    renderOverviewHero({ version: "—", port: "—", mcp: {}, bridge: { sessions: [] } }, false);
   }
 }
 

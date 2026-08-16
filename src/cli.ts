@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { access, copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { homedir, platform } from "node:os";
 import path from "node:path";
@@ -10,6 +10,7 @@ export const CLI_COMMANDS = new Set([
   "init",
   "install",
   "mcp",
+  "doctor",
   "help",
   "--help",
   "-h",
@@ -17,6 +18,8 @@ export const CLI_COMMANDS = new Set([
 
 const PLUGIN_NAME = "RoBridge.lua";
 const SERVER_NAME = "RoBridge";
+/** Official built-in Studio MCP (stdio StudioMCP / mcp.bat). Complementary — not RoBridge. */
+export const OFFICIAL_STUDIO_MCP_KEY = "Roblox_Studio";
 
 export type McpStdioSpawn = {
   command: string;
@@ -45,6 +48,7 @@ export type McpWriteSummary = {
   spawn: McpStdioSpawn;
   cursorUser: MergeResult;
   cursorProject: MergeResult;
+  vscodeProject: MergeResult;
   claudeDesktop: ClaudeDesktopStatus;
   claudeCode: ClaudeCodeStatus;
 };
@@ -108,6 +112,10 @@ export function cursorUserMcpPath(home = homedir()): string {
 
 export function cursorProjectMcpPath(root = packageRoot()): string {
   return path.join(root, ".cursor", "mcp.json");
+}
+
+export function vscodeProjectMcpPath(root = packageRoot()): string {
+  return path.join(root, ".vscode", "mcp.json");
 }
 
 export function claudeDesktopConfigPath(home = homedir()): string | null {
@@ -175,6 +183,7 @@ export async function mergeMcpServerConfig(
   filePath: string,
   entry: Record<string, unknown>,
   serverName = SERVER_NAME,
+  serversKey = "mcpServers",
 ): Promise<MergeResult> {
   await mkdir(path.dirname(filePath), { recursive: true });
 
@@ -209,13 +218,13 @@ export async function mergeMcpServerConfig(
     created = true;
   }
 
-  const existingServers = parsed.mcpServers;
+  const existingServers = parsed[serversKey];
   const servers: Record<string, unknown> =
     existingServers !== null && typeof existingServers === "object" && !Array.isArray(existingServers)
       ? { ...(existingServers as Record<string, unknown>) }
       : {};
   servers[serverName] = entry;
-  parsed.mcpServers = servers;
+  parsed[serversKey] = servers;
 
   await writeFile(filePath, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
   return { path: filePath, created, backedUp };
@@ -232,6 +241,19 @@ export async function writeCursorMcpConfigs(
     mergeMcpServerConfig(projectPath, spawn),
   ]);
   return { user, project };
+}
+
+export async function writeVscodeMcpConfig(
+  spawn: McpStdioSpawn,
+  options?: { projectPath?: string },
+): Promise<MergeResult> {
+  const projectPath = options?.projectPath ?? vscodeProjectMcpPath();
+  return mergeMcpServerConfig(
+    projectPath,
+    { type: "stdio", command: spawn.command, args: spawn.args },
+    SERVER_NAME,
+    "servers",
+  );
 }
 
 export async function writeClaudeDesktopConfig(
@@ -290,12 +312,14 @@ export async function configureClaudeCode(
 export async function writeMcpConfigs(): Promise<McpWriteSummary> {
   const spawn = mcpSpawn();
   const cursor = await writeCursorMcpConfigs(spawn);
+  const vscodeProject = await writeVscodeMcpConfig(spawn);
   const claudeDesktop = await writeClaudeDesktopConfig(spawn);
   const claudeCode = await configureClaudeCode(spawn);
   return {
     spawn,
     cursorUser: cursor.user,
     cursorProject: cursor.project,
+    vscodeProject,
     claudeDesktop,
     claudeCode,
   };
@@ -308,25 +332,29 @@ export function formatHelp(serverEntry = serverEntryPath()): string {
 Usage:
   robridge                         MCP stdio server (Cursor / Claude spawn this)
   npx robridge init                Dummy-proof setup: plugin + write MCP configs
+  npx robridge doctor              Checklist + one next step (does not start the server)
 
 Commands:
-  init, install                    Install the plugin and write Cursor / Claude configs
+  init, install                    Install the plugin and write Cursor / Claude / VS Code configs
   install-plugin                   Copy plugin/RoBridge.lua into the Roblox Plugins folder
   mcp                              Write MCP configs only (merge) and print a short summary
+  doctor                           Check Node, dist, plugin, MCP configs, :3737, Studio
   --help, -h                       Show this help
 
 First run:
-  npm install && npm run build && npx robridge init
+  npm install
 
-That copies the Studio plugin and writes Cursor + Claude MCP configs (merge —
-other servers are kept). Uses the absolute Node binary so GUI apps can spawn it.
-Clients start the server; you do not run it in a terminal.
+Postinstall builds the server and runs init (plugin + MCP configs, merge —
+other servers are kept). Re-run with npx robridge init. Uses the absolute Node
+binary so GUI apps can spawn it. Clients start the server; you do not run it
+in a terminal.
 
 Plugin destination:
   macOS    ~/Documents/Roblox/Plugins/RoBridge.lua
   Windows  %LOCALAPPDATA%\\Roblox\\Plugins\\RoBridge.lua
 
 Then refresh Plugins in Studio (or restart Studio) and Allow HTTP to 127.0.0.1.
+Official Studio MCP is optional (Assistant → … → Enable Studio as MCP server) and complementary — do not replace the RoBridge entry.
 
 Reload MCP in Cursor (Settings → MCP). Fully quit Claude Desktop if you use it.
 
@@ -362,6 +390,7 @@ export function formatSetupSummary(
 
   lines.push(`Cursor config: written to ${describeMerge(summary.cursorUser)}`);
   lines.push(`  Project config: ${describeMerge(summary.cursorProject)}`);
+  lines.push(`VS Code Copilot: written to ${describeMerge(summary.vscodeProject)}`);
 
   if (summary.claudeDesktop.status === "written" && summary.claudeDesktop.result) {
     lines.push(`Claude Desktop: written to ${describeMerge(summary.claudeDesktop.result)}`);
@@ -380,23 +409,35 @@ export function formatSetupSummary(
   lines.push("");
   lines.push("Next:");
   lines.push("  Reload MCP in Cursor (Settings → MCP).");
+  lines.push("  Reload Copilot MCP in VS Code if you use it.");
   lines.push("  Fully quit Claude Desktop if you use it.");
   lines.push("  Open Studio, Allow HTTP to 127.0.0.1.");
+  lines.push("  Official Studio MCP is optional (Assistant → … → Manage MCP Servers).");
+  lines.push("  Keep the RoBridge entry; Quick connect may add Roblox_Studio beside it.");
   lines.push("");
-  lines.push("Cursor and Claude spawn RoBridge for you — do not start it in a terminal.");
+  lines.push("Clients spawn RoBridge for you — do not start it in a terminal.");
   return lines.join("\n");
 }
 
 export function formatMcpFallback(spawn = mcpSpawn()): string {
   const cursor = { mcpServers: { [SERVER_NAME]: spawn } };
+  const vscode = {
+    servers: {
+      [SERVER_NAME]: { type: "stdio", ...spawn },
+    },
+  };
   const claudeCodeJson = {
     mcpServers: {
       [SERVER_NAME]: { type: "stdio", ...spawn },
     },
   };
-  return `Fallback spawn JSON (unusual clients only; init/mcp already wrote Cursor + Claude):
+  return `Fallback spawn JSON (unusual clients only; init/mcp already wrote Cursor, Claude, VS Code):
 
 ${JSON.stringify(cursor, null, 2)}
+
+VS Code Copilot JSON (.vscode/mcp.json — top-level "servers"):
+
+${JSON.stringify(vscode, null, 2)}
 
 Claude Code JSON (~/.claude.json user scope):
 
@@ -430,6 +471,397 @@ export async function installPlugin(): Promise<string> {
 function printPluginInstalled(dest: string): void {
   out(`Installed RoBridge plugin to: ${dest}`);
   out("Refresh Plugins in Studio (or restart Studio).");
+}
+
+export type DoctorStatus = "OK" | "FAIL" | "SKIP";
+export type DoctorNextKind = "node" | "dist" | "plugin" | "mcp" | "reload" | "studio" | "none";
+
+export type DoctorLine = {
+  status: DoctorStatus;
+  title: string;
+  detail: string;
+};
+
+export type DoctorHttpProbe = {
+  up: boolean;
+  dashboardUrl: string;
+  json: unknown | null;
+};
+
+export type DoctorDeps = {
+  nodeVersion?: string;
+  serverEntry?: string;
+  pluginPath?: string | null;
+  cursorUserPath?: string;
+  cursorProjectPath?: string;
+  claudeDesktopPath?: string | null;
+  port?: number;
+  fileExists?: (p: string) => boolean;
+  readText?: (p: string) => Promise<string>;
+  probeHttp?: (port: number) => Promise<DoctorHttpProbe>;
+};
+
+export type DoctorReport = {
+  text: string;
+  nextKind: DoctorNextKind;
+  lines: DoctorLine[];
+};
+
+export const DOCTOR_NEXT: Record<DoctorNextKind, string> = {
+  node: "Install Node 18+ from https://nodejs.org",
+  dist: "npm install or npm run build",
+  plugin: "npx robridge init",
+  mcp: "npx robridge init",
+  reload: "Reload MCP in Cursor (Settings → MCP → RoBridge)",
+  studio: "Open Roblox Studio, Allow HTTP to 127.0.0.1, refresh Plugins",
+  none: "none — you're set",
+};
+
+export function doctorPort(env = process.env): number {
+  const parsed = Number(env.ROBRIDGE_PORT ?? 3737);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3737;
+}
+
+export function nodeVersionIsSupported(version = process.version): boolean {
+  const trimmed = version.startsWith("v") ? version.slice(1) : version;
+  return nodeMajor(trimmed) >= 18;
+}
+
+export function pathEndsWithDistIndex(value: string): boolean {
+  const normalized = value.replace(/\\/g, "/");
+  return normalized.endsWith("/dist/index.js") || normalized === "dist/index.js";
+}
+
+/** User + project Cursor mcp.json — whether RoBridge is configured (not whether a client is live). */
+export function cursorMcpPresence(
+  home = homedir(),
+  root = packageRoot(),
+): { present: boolean; pointsAtDist: boolean } {
+  const paths = [cursorUserMcpPath(home), cursorProjectMcpPath(root)];
+  let present = false;
+  let pointsAtDist = false;
+  for (const filePath of paths) {
+    if (!existsSync(filePath)) continue;
+    try {
+      const raw = readFileSync(filePath, "utf8").replace(/^\uFEFF/, "").trim();
+      const inspect = inspectMcpRoBridgeEntry(JSON.parse(raw || "{}"));
+      if (inspect.present) present = true;
+      if (inspect.pointsAtDist) pointsAtDist = true;
+    } catch {
+      /* invalid JSON — treat as not configured on this path */
+    }
+  }
+  return { present, pointsAtDist };
+}
+
+export function inspectMcpRoBridgeEntry(config: unknown): {
+  present: boolean;
+  pointsAtDist: boolean;
+  command: string | null;
+  args: string[];
+  bareNode: boolean;
+} {
+  const empty = {
+    present: false,
+    pointsAtDist: false,
+    command: null as string | null,
+    args: [] as string[],
+    bareNode: false,
+  };
+  if (config === null || typeof config !== "object" || Array.isArray(config)) return empty;
+  const servers = (config as Record<string, unknown>).mcpServers;
+  if (servers === null || typeof servers !== "object" || Array.isArray(servers)) return empty;
+  const entry = (servers as Record<string, unknown>)[SERVER_NAME];
+  if (entry === undefined || entry === null) return empty;
+  if (typeof entry !== "object" || Array.isArray(entry)) {
+    return { present: true, pointsAtDist: false, command: null, args: [], bareNode: false };
+  }
+  const rec = entry as Record<string, unknown>;
+  const command = typeof rec.command === "string" ? rec.command : null;
+  const args = Array.isArray(rec.args) ? rec.args.filter((a): a is string => typeof a === "string") : [];
+  const pointsAtDist =
+    (command !== null && pathEndsWithDistIndex(command)) || args.some((a) => pathEndsWithDistIndex(a));
+  const bareNode = command === "node" || command === "node.exe";
+  return { present: true, pointsAtDist, command, args, bareNode };
+}
+
+export function looksLikeOfficialStudioMcpSpawn(command: string | null, args: readonly string[] = []): boolean {
+  const hay = [command ?? "", ...args].join(" ").replace(/\\/g, "/").toLowerCase();
+  return hay.includes("studiomcp") || hay.includes("mcp.bat");
+}
+
+export function mcpConfigHasOfficialStudioServer(config: unknown, serversKey = "mcpServers"): boolean {
+  if (config === null || typeof config !== "object" || Array.isArray(config)) return false;
+  const servers = (config as Record<string, unknown>)[serversKey];
+  if (servers === null || typeof servers !== "object" || Array.isArray(servers)) return false;
+  return Object.prototype.hasOwnProperty.call(servers, OFFICIAL_STUDIO_MCP_KEY);
+}
+
+export function officialStudioMcpDoctorHint(
+  userConfig: unknown | null,
+  projectConfig: unknown | null = null,
+): string | null {
+  const configs = [userConfig, projectConfig];
+  let officialPresent = false;
+  let replaced = false;
+  for (const cfg of configs) {
+    if (cfg == null) continue;
+    if (mcpConfigHasOfficialStudioServer(cfg)) officialPresent = true;
+    const inspect = inspectMcpRoBridgeEntry(cfg);
+    if (inspect.present && looksLikeOfficialStudioMcpSpawn(inspect.command, inspect.args)) {
+      replaced = true;
+    }
+  }
+  if (replaced) {
+    return "RoBridge spawn points at Roblox's built-in StudioMCP — that is a different server. Re-run npx robridge init so RoBridge stays node + dist/index.js. Official MCP can sit beside us as mcpServers.Roblox_Studio.";
+  }
+  if (officialPresent) {
+    return "Official Roblox Studio MCP (Roblox_Studio) is also configured — complementary, not a replacement. RoBridge still uses the plugin + :3737.";
+  }
+  return null;
+}
+
+export function studioFromStatusJson(json: unknown): { connected: boolean } | null {
+  if (json === null || typeof json !== "object" || Array.isArray(json)) return null;
+  const rec = json as Record<string, unknown>;
+  const sessionsFromRoot = Array.isArray(rec.sessions) ? rec.sessions : null;
+  const bridge = rec.bridge;
+  const sessionsFromBridge =
+    bridge !== null && typeof bridge === "object" && !Array.isArray(bridge) && Array.isArray((bridge as Record<string, unknown>).sessions)
+      ? ((bridge as Record<string, unknown>).sessions as unknown[])
+      : null;
+  const sessions = sessionsFromBridge ?? sessionsFromRoot;
+  const liveSession =
+    sessions?.some((s) => {
+      if (s === null || typeof s !== "object" || Array.isArray(s)) return false;
+      return (s as Record<string, unknown>).connected === true;
+    }) ?? false;
+  if (liveSession) return { connected: true };
+  if (typeof rec.studioConnected === "boolean") return { connected: rec.studioConnected };
+  if (sessions) return { connected: false };
+  return null;
+}
+
+export function pickDoctorNext(f: {
+  nodeOk: boolean;
+  distOk: boolean;
+  pluginFail: boolean;
+  mcpOk: boolean;
+  httpUp: boolean;
+  studioConnected: boolean | null;
+}): { kind: DoctorNextKind; text: string } {
+  if (!f.nodeOk) return { kind: "node", text: DOCTOR_NEXT.node };
+  if (!f.distOk) return { kind: "dist", text: DOCTOR_NEXT.dist };
+  if (f.pluginFail) return { kind: "plugin", text: DOCTOR_NEXT.plugin };
+  if (!f.mcpOk) return { kind: "mcp", text: DOCTOR_NEXT.mcp };
+  if (!f.httpUp) return { kind: "reload", text: DOCTOR_NEXT.reload };
+  if (f.studioConnected === false) return { kind: "studio", text: DOCTOR_NEXT.studio };
+  return { kind: "none", text: DOCTOR_NEXT.none };
+}
+
+export function formatDoctorReport(
+  lines: DoctorLine[],
+  next: string,
+  dashboardUrl: string | null,
+  warns: string[] = [],
+): string {
+  const padTitle = Math.max(14, ...lines.map((l) => l.title.length));
+  const body = lines.map((l) => `${l.status.padEnd(4)} ${l.title.padEnd(padTitle)}  ${l.detail}`);
+  const outLines = ["RoBridge doctor", "", ...body];
+  if (warns.length > 0) {
+    outLines.push("");
+    for (const w of warns) outLines.push(`WARN ${w}`);
+  }
+  outLines.push("");
+  outLines.push(`Next: ${next}`);
+  if (dashboardUrl) outLines.push(`Dashboard: ${dashboardUrl}`);
+  return `${outLines.join("\n")}\n`;
+}
+
+export async function probeRoBridgeHttp(
+  port: number,
+  fetcher: (url: string, init?: RequestInit) => Promise<Response> = fetch,
+): Promise<DoctorHttpProbe> {
+  const dashboardUrl = `http://127.0.0.1:${port}`;
+  const get = async (url: string): Promise<Response | null> => {
+    try {
+      return await fetcher(url, { signal: AbortSignal.timeout(1500) });
+    } catch {
+      return null;
+    }
+  };
+
+  const statusRes = await get(`${dashboardUrl}/api/status`);
+  if (statusRes?.ok) {
+    try {
+      const json: unknown = await statusRes.json();
+      return { up: true, dashboardUrl, json };
+    } catch {
+      return { up: true, dashboardUrl, json: null };
+    }
+  }
+
+  const rootRes = await get(`${dashboardUrl}/`);
+  if (rootRes?.ok) return { up: true, dashboardUrl, json: null };
+  return { up: false, dashboardUrl, json: null };
+}
+
+async function readJsonObjectFile(
+  filePath: string,
+  readText: (p: string) => Promise<string>,
+  fileExists: (p: string) => boolean,
+): Promise<{ status: "missing" | "invalid" | "ok"; value?: Record<string, unknown> }> {
+  if (!fileExists(filePath)) return { status: "missing" };
+  try {
+    const raw = await readText(filePath);
+    const value: unknown = JSON.parse(raw.replace(/^\uFEFF/, "").trim() || "{}");
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      return { status: "invalid" };
+    }
+    return { status: "ok", value: value as Record<string, unknown> };
+  } catch {
+    return { status: "invalid" };
+  }
+}
+
+export async function runDoctor(deps: DoctorDeps = {}): Promise<DoctorReport> {
+  const nodeVersion = deps.nodeVersion ?? process.version;
+  const serverEntry = deps.serverEntry ?? serverEntryPath();
+  const pluginPath = deps.pluginPath === undefined ? pluginDestPath() : deps.pluginPath;
+  const cursorUserPath = deps.cursorUserPath ?? cursorUserMcpPath();
+  const cursorProjectPath = deps.cursorProjectPath ?? cursorProjectMcpPath();
+  const claudeDesktopPath =
+    deps.claudeDesktopPath === undefined ? claudeDesktopConfigPath() : deps.claudeDesktopPath;
+  const port = deps.port ?? doctorPort();
+  const fileExists = deps.fileExists ?? existsSync;
+  const readText = deps.readText ?? ((p: string) => readFile(p, "utf8"));
+  const probeHttp = deps.probeHttp ?? ((p: number) => probeRoBridgeHttp(p));
+
+  const lines: DoctorLine[] = [];
+  const warns: string[] = [];
+
+  const nodeOk = nodeVersionIsSupported(nodeVersion);
+  lines.push({
+    status: nodeOk ? "OK" : "FAIL",
+    title: "Node",
+    detail: nodeOk ? `${nodeVersion} (>= 18)` : `${nodeVersion} (need >= 18)`,
+  });
+
+  const distOk = fileExists(serverEntry);
+  lines.push({
+    status: distOk ? "OK" : "FAIL",
+    title: "dist/index.js",
+    detail: distOk ? serverEntry : `missing ${serverEntry}`,
+  });
+
+  let pluginFail = false;
+  if (pluginPath === null) {
+    lines.push({
+      status: "SKIP",
+      title: "Plugin",
+      detail: "unsupported platform — copy plugin/RoBridge.lua into the Roblox Plugins folder manually",
+    });
+  } else if (fileExists(pluginPath)) {
+    lines.push({ status: "OK", title: "Plugin", detail: pluginPath });
+  } else {
+    pluginFail = true;
+    lines.push({ status: "FAIL", title: "Plugin", detail: `missing ${pluginPath}` });
+  }
+
+  const userMcp = await readJsonObjectFile(cursorUserPath, readText, fileExists);
+  const userInspect = userMcp.status === "ok" ? inspectMcpRoBridgeEntry(userMcp.value) : inspectMcpRoBridgeEntry(null);
+  const mcpOk = userMcp.status === "ok" && userInspect.present && userInspect.pointsAtDist;
+  if (mcpOk) {
+    lines.push({ status: "OK", title: "Cursor MCP", detail: `${cursorUserPath} → dist/index.js` });
+    if (userInspect.bareNode) {
+      warns.push("GUI apps may need a full Node path; run init again.");
+    }
+  } else if (userMcp.status === "missing") {
+    lines.push({ status: "FAIL", title: "Cursor MCP", detail: `${cursorUserPath} missing` });
+  } else if (userMcp.status === "invalid") {
+    lines.push({ status: "FAIL", title: "Cursor MCP", detail: `${cursorUserPath} is not valid JSON` });
+  } else if (!userInspect.present) {
+    lines.push({ status: "FAIL", title: "Cursor MCP", detail: `${cursorUserPath} has no mcpServers.RoBridge` });
+  } else {
+    lines.push({
+      status: "FAIL",
+      title: "Cursor MCP",
+      detail: `${cursorUserPath} RoBridge does not point at dist/index.js`,
+    });
+  }
+
+  let projectConfig: unknown | null = null;
+  if (fileExists(cursorProjectPath)) {
+    const projectMcp = await readJsonObjectFile(cursorProjectPath, readText, fileExists);
+    if (projectMcp.status === "ok") projectConfig = projectMcp.value ?? null;
+    const projectInspect =
+      projectMcp.status === "ok" ? inspectMcpRoBridgeEntry(projectMcp.value) : inspectMcpRoBridgeEntry(null);
+    if (projectInspect.present && projectInspect.pointsAtDist) {
+      lines.push({ status: "OK", title: "Project MCP", detail: `${cursorProjectPath} → dist/index.js` });
+    } else {
+      lines.push({
+        status: "SKIP",
+        title: "Project MCP",
+        detail: `${cursorProjectPath} present (RoBridge does not point at dist/index.js)`,
+      });
+    }
+    if (projectInspect.bareNode && !warns.includes("GUI apps may need a full Node path; run init again.")) {
+      warns.push("GUI apps may need a full Node path; run init again.");
+    }
+  }
+
+  const officialHint = officialStudioMcpDoctorHint(
+    userMcp.status === "ok" ? (userMcp.value ?? null) : null,
+    projectConfig,
+  );
+  if (officialHint) warns.push(officialHint);
+
+  if (!claudeDesktopPath || !fileExists(claudeDesktopPath)) {
+    lines.push({ status: "SKIP", title: "Claude Desktop", detail: "not installed" });
+  } else {
+    const claude = await readJsonObjectFile(claudeDesktopPath, readText, fileExists);
+    const inspect = claude.status === "ok" ? inspectMcpRoBridgeEntry(claude.value) : inspectMcpRoBridgeEntry(null);
+    if (inspect.present && inspect.pointsAtDist) {
+      lines.push({ status: "OK", title: "Claude Desktop", detail: `${claudeDesktopPath} → dist/index.js` });
+    } else {
+      lines.push({
+        status: "SKIP",
+        title: "Claude Desktop",
+        detail: `${claudeDesktopPath} has no RoBridge entry (optional)`,
+      });
+    }
+  }
+
+  const http = await probeHttp(port);
+  if (http.up) {
+    lines.push({ status: "OK", title: `HTTP :${port}`, detail: `up  ${http.dashboardUrl}` });
+  } else {
+    lines.push({
+      status: "SKIP",
+      title: `HTTP :${port}`,
+      detail: "down (normal if Cursor MCP is not loaded yet)",
+    });
+  }
+
+  let studioConnected: boolean | null = null;
+  if (!http.up) {
+    lines.push({ status: "SKIP", title: "Studio", detail: "skipped (server not running)" });
+  } else {
+    const studio = studioFromStatusJson(http.json);
+    if (studio === null) {
+      lines.push({ status: "SKIP", title: "Studio", detail: "status JSON not available" });
+    } else if (studio.connected) {
+      studioConnected = true;
+      lines.push({ status: "OK", title: "Studio", detail: "connected" });
+    } else {
+      studioConnected = false;
+      lines.push({ status: "FAIL", title: "Studio", detail: "not connected" });
+    }
+  }
+
+  const next = pickDoctorNext({ nodeOk, distOk, pluginFail, mcpOk, httpUp: http.up, studioConnected });
+  const text = formatDoctorReport(lines, next.text, http.up ? http.dashboardUrl : null, warns);
+  return { text, nextKind: next.kind, lines };
 }
 
 async function runInit(includePlugin: boolean): Promise<number> {
@@ -480,6 +912,11 @@ export async function dispatchCli(argv: string[]): Promise<number> {
         return await runInit(true);
       case "mcp":
         return await runInit(false);
+      case "doctor": {
+        const report = await runDoctor();
+        out(report.text);
+        return 0;
+      }
       default:
         out(formatHelp());
         return 1;

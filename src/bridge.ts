@@ -39,7 +39,8 @@ const SESSION_STALE_MS = 45_000;
 const SESSION_LIVE_MS = 8_000;
 const DISCONNECTED_KEEP_MS = 10 * 60_000;
 const DEFAULT_JOB_TIMEOUT_MS = 30_000;
-const LONG_POLL_MS = 20_000;
+/** Keep under Studio HttpService's ~20–30s read timeout so idle polls are not Timedout. */
+const LONG_POLL_MS = 12_000;
 const PLAY_POLL_MS = 4_000;
 
 function isPlayAgent(info: { mode?: string; pluginVersion?: string } | undefined) {

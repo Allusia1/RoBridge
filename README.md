@@ -1,7 +1,7 @@
 # RoBridge
 
 [![version](https://img.shields.io/badge/server-0.1.6-c17a4a)](docs/README.md)
-[![plugin](https://img.shields.io/badge/plugin-0.1.8-7d9b72)](plugin/RoBridge.lua)
+[![plugin](https://img.shields.io/badge/plugin-0.1.9-7d9b72)](plugin/RoBridge.lua)
 [![tools](https://img.shields.io/badge/tools-24%20free-181714)](docs/tools.md)
 [![license](https://img.shields.io/badge/license-MIT-6f6a60)](LICENSE)
 [![changelog](https://img.shields.io/badge/changelog-0.1.6-6f6a60)](CHANGELOG.md)
@@ -31,23 +31,23 @@ Everything lives in this repo (no separate docs site):
 | [Tools](docs/tools.md) | Full action + param reference |
 | [Troubleshooting](docs/troubleshooting.md) | Fix lines, stuck Play |
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
-| [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.8 |
+| [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.9 |
 
-Clone this repo, then install, build, and init (see **First run**).
+Clone this repo, then `npm install` (see **First run**).
 
 ## Works with
 
-Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). `npx robridge init` writes the spawn config (absolute Node binary + absolute `dist/index.js`, empty argv). Details: [docs/mcp.md](docs/mcp.md).
+Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). Init writes the spawn config (absolute Node binary + absolute `dist/index.js`, empty argv). Details: [docs/mcp.md](docs/mcp.md).
 
 ## First run
 
 ```bash
-npm install && npm run build && npx robridge init
+npm install
 ```
 
-That copies the Studio plugin into the Roblox Plugins folder **and writes** Cursor / Claude MCP configs (merge — other servers are kept). Plugin only: `npx robridge install-plugin`. Configs only: `npx robridge mcp`.
+Postinstall **builds** the server and runs **init**: copies the Studio plugin into the Roblox Plugins folder **and writes** Cursor / Claude MCP configs (merge — other servers are kept). Re-run later with `npx robridge init`. Plugin only: `npx robridge install-plugin`. Configs only: `npx robridge mcp`.
 
-Then **refresh Plugins in Studio** (or restart Studio), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**. Reload MCP in Cursor (Settings → MCP). Fully quit Claude Desktop if you use it. Clients spawn the server; you do not start it in a terminal.
+Then **reload MCP** in Cursor (Settings → MCP), **open Studio** (or refresh Plugins), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**. Fully quit Claude Desktop if you use it. Clients spawn the server; you do not start it in a terminal. Stuck? `npx robridge doctor` prints a checklist (Node, dist, plugin, MCP config, :3737, Studio) and exactly one next step. Official Studio MCP (Assistant → **…** → **Enable Studio as MCP server**) is optional and complementary — it does not use `:3737` ([MCP setup](docs/mcp.md)).
 
 Plugin destination:
 
@@ -131,7 +131,6 @@ Tool errors append a `Fix:` line when the server recognizes the failure. Run `sy
 - One RoBridge instance owns `:3737`; extra MCP clients **forward** to that owner.
 - `manage_assets` insert uses `InsertService:LoadAsset` (asset must be free or owned by you).
 - Open Cloud asset upload is not included. `upload_asset` is Studio `AssetService:CreateAssetAsync` (`confirm=true`).
-- Not a crate game. The product is the local MCP bridge.
 
 See [docs/limits.md](docs/limits.md).
 
@@ -140,7 +139,7 @@ See [docs/limits.md](docs/limits.md).
 | Path | |
 | --- | --- |
 | `src/` | MCP + HTTP server (`VERSION` 0.1.6) |
-| `plugin/` | Studio plugin (`VERSION` 0.1.8) |
+| `plugin/` | Studio plugin (`VERSION` 0.1.9) |
 | `ui/` | Dashboard served at [http://127.0.0.1:3737](http://127.0.0.1:3737) |
 | `docs/` | Install, MCP, playtesting, tools, limits |
 | `scripts/` | Plugin install, catalog extract, tests |
