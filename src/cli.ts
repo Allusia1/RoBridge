@@ -75,11 +75,8 @@ Flags (MCP / server process — not for client spawn except the default empty ar
   --dump-catalog                   Print the tool catalog as JSON and exit
   --no-mcp                         HTTP dashboard only (do not put this on an MCP spawn)
 
-First run (this repo is private and not on npm yet):
+First run:
   npm install && npm run build && npx robridge init
-
-If this package is published later:
-  npx robridge@latest init
 
 Plugin destination:
   macOS    ~/Documents/Roblox/Plugins/RoBridge.lua
@@ -109,17 +106,14 @@ export function formatMcpSnippets(serverEntry = serverEntryPath()): string {
 
   return `RoBridge MCP spawn (stdio)
 
-This checkout is private / not on the public npm registry, so clients must spawn Node
-with an absolute path. Empty argv starts the server — do not add install-plugin, init,
-mcp, --help, --dump-catalog, or --no-mcp to a client spawn.
+Clients spawn Node with an absolute path to dist/index.js. Empty argv starts the
+server — do not add install-plugin, init, mcp, --help, --dump-catalog, or --no-mcp
+to a client spawn.
 
   node ${shellQuote(serverEntry)}
 
 After clone:
   npm install && npm run build && npx robridge init
-
-If published later:
-  npx robridge@latest init
 
 Claude Code (one-liner):
   ${claudeAdd}

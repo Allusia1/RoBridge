@@ -31,7 +31,7 @@ Everything lives in this repo (no separate docs site):
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
 | [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.8 |
 
-Clone this repo and run it locally. It is **not** published to the public npm registry yet, so `npx robridge@latest` will not work until that changes.
+Clone this repo, then install, build, and init (see **First run**).
 
 ## Works with
 
@@ -74,8 +74,6 @@ Cursor / Claude Desktop — `~/.cursor/mcp.json` (absolute path):
 ```
 
 `npx robridge mcp` prints these blocks with your real path. Other clients: [MCP setup](docs/mcp.md). Reload the MCP server after each rebuild. Claude Desktop: fully quit and reopen.
-
-If this package is published later: `npx robridge@latest init`.
 
 Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only: `node dist/index.js --no-mcp`.
 

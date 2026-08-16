@@ -2,7 +2,7 @@
 
 RoBridge is a **local stdio** MCP server. The client spawns `node dist/index.js` with **empty argv** (Node **18+**). That process serves the dashboard at `http://127.0.0.1:3737` and talks to the Studio plugin.
 
-This repo is **private** and **not** on the public npm registry. `npx robridge@latest` will not work until it is published. After clone: `npm install && npm run build && npx robridge init`. That uses the local `bin.robridge` (`dist/index.js`). Point every client at the **absolute path** to `dist/index.js`.
+After clone: `npm install && npm run build && npx robridge init`. That uses the local `bin.robridge` (`dist/index.js`). Point every client at the **absolute path** to `dist/index.js`.
 
 Empty argv (or any unknown argument) starts MCP, so Cursor / Claude can spawn `node …/dist/index.js` unchanged. Known commands (`install-plugin`, `init` / `install`, `mcp`, `--help`) print and exit instead of starting the server.
 

@@ -30,5 +30,5 @@ First GitHub release. Server **0.1.6**, plugin **0.1.8**.
 
 ### Notes
 
-- Clone and run locally. Not published to the public npm registry.
+- Clone, `npm install && npm run build && npx robridge init`. MCP clients spawn `node` with an absolute path to `dist/index.js`.
 - Open Cloud asset upload is not included. `upload_asset` is Studio `AssetService:CreateAssetAsync` (`confirm=true`).

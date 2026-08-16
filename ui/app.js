@@ -6,6 +6,7 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
     document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
     btn.classList.add("active");
     $("#tab-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "overview") scheduleTopoLines();
     if (btn.dataset.tab === "tools") refreshTools();
     if (btn.dataset.tab === "ui-studio") refreshGallery().catch(() => {});
   });
@@ -45,78 +46,174 @@ function fmtAgo(ms) {
   return `${Math.floor(s / 3600)}h ago`;
 }
 
-function nodeHtml(kicker, title, status, state) {
-  return `<div class="topo-node ${esc(state)}">
-    <span class="topo-kicker">${esc(kicker)}</span>
-    <strong>${esc(title)}</strong>
-    <span class="topo-status">${esc(status)}</span>
-  </div>`;
+function liveSessions(sessions) {
+  return (sessions || []).filter((x) => x.connected === true);
 }
 
-function linkHtml(on) {
-  return `<div class="topo-link-col"><div class="topo-link ${on ? "on" : "off"}"></div></div>`;
+function fmtTopoAgo(ms) {
+  if (ms == null || Number.isNaN(ms)) return "—";
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
 }
 
-function sessionState(s) {
-  if (s.connected) return "on";
-  return "off";
+const ICON_ROBOT = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="7" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="7.5" cy="11.2" r="1" fill="currentColor"/><circle cx="12.5" cy="11.2" r="1" fill="currentColor"/><path d="M10 7V4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="3.5" r="1" fill="currentColor"/></svg>`;
+const ICON_MONITOR = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3.5" width="14" height="10" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M7 16.5h6M10 13.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const ICON_SERVER = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="3" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="9.3" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="15.6" width="15" height="5.4" rx="1.2" stroke="currentColor" stroke-width="1.6"/><circle cx="7.8" cy="5.7" r="0.85" fill="currentColor"/><circle cx="7.8" cy="12" r="0.85" fill="currentColor"/><circle cx="7.8" cy="18.3" r="0.85" fill="currentColor"/></svg>`;
+
+function agentName(mcp) {
+  if (mcp.label === "http-proxy") return "MCP client";
+  return "Cursor";
 }
 
-function renderTopology(s) {
+function studioTitle(x, live) {
+  const name = x.placeName || "Studio";
+  const same = live.filter((s) => (s.placeName || "Studio") === name).length;
+  if (same > 1 && x.sessionId) return `${name} · ${String(x.sessionId).slice(0, 6)}`;
+  return name;
+}
+
+function studioMode(x) {
+  if (x.playAgent || x.mode === "play" || x.mode === "run") return "Play";
+  return "Edit";
+}
+
+function pluginVerLabel(x) {
+  const v = x.pluginVersion || "?";
+  if (String(v).startsWith("play-")) return v;
+  return `v${v}`;
+}
+
+let topoRaf = 0;
+function scheduleTopoLines() {
+  if (topoRaf) cancelAnimationFrame(topoRaf);
+  topoRaf = requestAnimationFrame(() => {
+    topoRaf = 0;
+    drawTopologyLines();
+  });
+}
+
+function drawTopologyLines() {
+  const canvas = $("#topo-canvas");
+  const svg = $("#topo-lines");
+  if (!canvas || !svg) return;
+  const cr = canvas.getBoundingClientRect();
+  if (cr.width < 8 || cr.height < 8) {
+    svg.replaceChildren();
+    return;
+  }
+  svg.setAttribute("viewBox", `0 0 ${cr.width} ${cr.height}`);
+  svg.setAttribute("width", String(cr.width));
+  svg.setAttribute("height", String(cr.height));
+
+  const hub = canvas.querySelector(".topo-hub");
+  if (!hub) {
+    svg.replaceChildren();
+    return;
+  }
+  const hr = hub.getBoundingClientRect();
+  const hubLeftX = hr.left - cr.left;
+  const hubRightX = hr.right - cr.left;
+  const hubMidY = hr.top - cr.top + hr.height / 2;
+
+  const ns = "http://www.w3.org/2000/svg";
+  const frag = document.createDocumentFragment();
+  const addLine = (x1, y1, x2, y2) => {
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", x1.toFixed(1));
+    line.setAttribute("y1", y1.toFixed(1));
+    line.setAttribute("x2", x2.toFixed(1));
+    line.setAttribute("y2", y2.toFixed(1));
+    frag.appendChild(line);
+  };
+
+  canvas.querySelectorAll("[data-topo='agent']").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    addLine(r.right - cr.left, r.top - cr.top + r.height / 2, hubLeftX, hubMidY);
+  });
+  canvas.querySelectorAll("[data-topo='studio']").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    addLine(hubRightX, hubMidY, r.left - cr.left, r.top - cr.top + r.height / 2);
+  });
+  svg.replaceChildren(frag);
+}
+
+function renderTopology(s, online = true) {
   const mcp = s.mcp || {};
-  const sessions = (s.bridge && s.bridge.sessions) || [];
-  const live = sessions.filter((x) => x.connected);
-  const mcpOn = !!mcp.clientConnected;
-  const mcpIdle = !mcpOn && mcp.label === "dashboard-only";
-  const mcpState = mcpOn ? "on" : mcpIdle ? "idle" : "off";
-  const mcpStatus = mcpOn
-    ? mcp.label === "http-proxy"
-      ? "HTTP proxy · live"
-      : "stdio · connected"
+  const live = liveSessions((s.bridge && s.bridge.sessions) || []);
+  const mcpOn = online && !!mcp.clientConnected;
+  const agentLabel = agentName(mcp);
+  const lastClientAgo =
+    mcp.lastClientAt != null ? fmtTopoAgo(Date.now() - mcp.lastClientAt) : null;
+  const agentMeta = mcpOn
+    ? lastClientAgo
+      ? `Last activity ${lastClientAgo}`
+      : mcp.label === "http-proxy"
+        ? "HTTP proxy · live"
+        : "stdio · connected"
     : mcp.label === "dashboard-only"
       ? "not attached"
-      : mcp.label || "offline";
-  const serverOn = true;
-  const pluginOn = live.length > 0;
-  const placeLive = live[0];
-  const placeName = placeLive?.placeName || (sessions[0]?.placeName ?? "No place");
-  const placeState = pluginOn ? "on" : "off";
+      : lastClientAgo
+        ? `Last activity ${lastClientAgo}`
+        : "not attached";
 
-  const pluginNodes = (sessions.length ? sessions : [{ placeName: "No plugin", connected: false, mode: "—", pluginVersion: "—" }])
-    .map((x) => {
-      const title = x.playAgent ? `${x.placeName || "Play"} · play` : x.placeName || "Studio";
-      const status = x.connected
-        ? `${x.mode || "edit"} · v${x.pluginVersion || "?"}`
-        : "disconnected";
-      return nodeHtml("Plugin", title, status, sessionState(x));
-    })
-    .join("");
+  const agentCard = `<article class="topo-card${mcpOn ? " on" : ""}" data-topo="agent">
+      <div class="topo-card-top">
+        <span class="topo-dot${mcpOn ? " on" : ""}"></span>
+        <strong>${esc(agentLabel)}</strong>
+        <span class="topo-pill${mcpOn ? " active" : ""}">${mcpOn ? "Active" : "Idle"}</span>
+      </div>
+      <div class="topo-card-meta">${esc(agentMeta)}</div>
+    </article>`;
 
-  const uniquePlaces = [];
-  for (const x of live.length ? live : sessions) {
-    const key = `${x.placeId || 0}:${x.placeName || ""}`;
-    if (!uniquePlaces.some((p) => p.key === key)) uniquePlaces.push({ key, ...x });
-  }
-  const placeNodes = (uniquePlaces.length ? uniquePlaces : [{ placeName, connected: false, placeId: 0 }])
-    .map((p) =>
-      nodeHtml(
-        "Place",
-        p.placeName || "—",
-        p.connected ? `id ${p.placeId || 0}` : "no session",
-        p.connected ? "on" : "off"
-      )
-    )
-    .join("");
+  const studioCards = live.length
+    ? live
+        .map((x) => {
+          const mode = studioMode(x);
+          const seen = fmtTopoAgo(x.lastSeenMsAgo ?? Date.now() - x.lastSeen);
+          const meta = [x.placeId || "—", pluginVerLabel(x)].join(" · ");
+          return `<article class="topo-card on" data-topo="studio">
+        <div class="topo-card-top">
+          <strong>${esc(studioTitle(x, live))}</strong>
+          <span class="topo-pill ${mode === "Play" ? "play" : "edit"}">${esc(mode)}</span>
+        </div>
+        <div class="topo-card-meta">${esc(meta)}</div>
+        <div class="topo-card-foot">connected · Last seen ${esc(seen)}</div>
+      </article>`;
+        })
+        .join("")
+    : `<div class="topo-empty">No Studio connected</div>`;
 
-  $("#topology").innerHTML = `<div class="topo-flow">
-    <div class="topo-col narrow">${nodeHtml("MCP client", mcpOn ? "Agent" : "No agent", mcpStatus, mcpState)}</div>
-    ${linkHtml(mcpOn)}
-    <div class="topo-col">${nodeHtml("RoBridge", `:${s.port}`, `v${s.version} · HTTP`, serverOn ? "on" : "off")}</div>
-    ${linkHtml(pluginOn)}
-    <div class="topo-col">${pluginNodes}</div>
-    ${linkHtml(pluginOn && !!placeLive)}
-    <div class="topo-col">${placeNodes}</div>
+  const hubVer = s.version != null && s.version !== "—" ? `v${s.version}` : "—";
+  const hubPort = s.port != null && s.port !== "—" ? `:${s.port}` : "—";
+
+  $("#topology").innerHTML = `<div class="topo-head">
+    <div class="topo-title">Connection topology</div>
+    <p class="topo-sub">AI agents and Roblox Studio windows connect through one RoBridge server.</p>
+  </div>
+  <div class="topo-canvas" id="topo-canvas">
+    <svg class="topo-lines" id="topo-lines" aria-hidden="true"></svg>
+    <div class="topo-grid">
+      <div class="topo-side agents">
+        <div class="topo-side-head">${ICON_ROBOT}<span>AI Agents</span><span class="topo-count">1</span></div>
+        <div class="topo-stack">${agentCard}</div>
+      </div>
+      <div class="topo-hub-wrap">
+        <article class="topo-hub${online ? " on" : " off"}">
+          <div class="topo-hub-icon">${ICON_SERVER}</div>
+          <strong>RoBridge</strong>
+          <div class="topo-hub-status"><span class="topo-dot${online ? " on" : ""}"></span>${online ? "Online" : "Offline"}</div>
+          <div class="topo-hub-meta">${esc(hubVer)} · ${esc(hubPort)}</div>
+        </article>
+      </div>
+      <div class="topo-side studios">
+        <div class="topo-side-head">${ICON_MONITOR}<span>Studio Targets</span><span class="topo-count">${live.length}</span></div>
+        <div class="topo-stack">${studioCards}</div>
+      </div>
+    </div>
   </div>`;
+  scheduleTopoLines();
 }
 
 function renderPreflight(s) {
@@ -317,15 +414,7 @@ async function refreshStatus() {
     $("#top-mode").textContent = "offline";
     $("#top-mode").className = "mode-badge offline";
     $("#top-place").textContent = "—";
-    $("#topology").innerHTML = `<div class="topo-flow">
-      ${nodeHtml("MCP client", "Unknown", "server offline", "off")}
-      ${linkHtml(false)}
-      ${nodeHtml("RoBridge", "offline", "not listening", "off")}
-      ${linkHtml(false)}
-      ${nodeHtml("Plugin", "No plugin", "disconnected", "off")}
-      ${linkHtml(false)}
-      ${nodeHtml("Place", "—", "no session", "off")}
-    </div>`;
+    renderTopology({ version: "—", port: "—", mcp: {}, bridge: { sessions: [] } }, false);
   }
 }
 
@@ -473,6 +562,28 @@ $("#logs-live").addEventListener("change", () => {
 });
 
 let seqTimer = null;
+let shotGen = 0;
+
+function viewportFrame() {
+  return document.querySelector("#tab-ui-studio .viewport-frame");
+}
+
+function setViewportMode(mode) {
+  const frame = viewportFrame();
+  if (!frame) return;
+  frame.classList.remove("is-empty", "is-image", "is-video");
+  frame.classList.add(`is-${mode}`);
+}
+
+function isPlayableVideo(item) {
+  if (!item) return false;
+  const mime = String(item.mimeType || "").toLowerCase();
+  const frames = Number(item.frameCount || 0);
+  if (mime.startsWith("video/")) return true;
+  if (frames === 1) return false;
+  const animated = mime === "image/apng" || mime === "image/gif" || mime.includes("apng");
+  return item.kind === "video" && (animated || frames > 1);
+}
 
 function stopSeq() {
   if (seqTimer) {
@@ -486,72 +597,104 @@ function stopSeq() {
   }
 }
 
-function hideViewport() {
-  stopSeq();
-  const img = $("#shot-image");
+function hideVideo() {
   const video = $("#shot-video");
-  if (img) img.hidden = true;
-  if (video) {
-    video.hidden = true;
-    video.removeAttribute("src");
-    video.load();
+  if (!video) return;
+  stopSeq();
+  try {
+    video.pause();
+  } catch {
+    /* ignore */
   }
+  video.hidden = true;
+  video.removeAttribute("src");
+  video.srcObject = null;
+  video.load();
+}
+
+function hideImage() {
+  const img = $("#shot-image");
+  if (!img) return;
+  img.hidden = true;
+  img.removeAttribute("src");
+}
+
+function hideViewport() {
+  hideImage();
+  hideVideo();
+}
+
+function showEmptyViewport(title = "No image", detail = "No capture yet") {
+  shotGen += 1;
+  hideViewport();
+  setViewportMode("empty");
+  const empty = $("#shot-empty");
+  empty.style.display = "";
+  empty.innerHTML = `<strong>${esc(title)}</strong><span>${esc(detail)}</span>`;
 }
 
 function showShot(item) {
+  if (!item || !item.id) {
+    showEmptyViewport();
+    setMeta("No capture yet");
+    return;
+  }
+  const gen = ++shotGen;
   const id = item.id;
   const width = item.width;
   const height = item.height;
   const time = item.time;
-  const kind = item.kind || "image";
-  const mime = item.mimeType || "image/png";
+  const mime = item.mimeType || "";
   const img = $("#shot-image");
-  const video = $("#shot-video");
   $("#shot-empty").style.display = "none";
   const when = time ? new Date(time).toLocaleTimeString() : "just now";
-  const extra = kind === "video" ? ` · ${item.frameCount || "?"}f · ${(item.fps || 0).toFixed ? Number(item.fps).toFixed(1) : item.fps}fps` : "";
+  const asVideo = isPlayableVideo(item);
+  const extra = asVideo ? ` · ${item.frameCount || "?"}f · ${(item.fps || 0).toFixed ? Number(item.fps).toFixed(1) : item.fps}fps` : "";
   setMeta(`${width || "?"}×${height || "?"} · ${when} · ${item.source || "CaptureService"}${extra}`);
   document.querySelectorAll(".shot-thumbs button").forEach((b) => b.classList.toggle("active", b.dataset.id === id));
 
-  if (kind !== "video") {
-    stopSeq();
-    video.hidden = true;
-    video.removeAttribute("src");
+  if (!asVideo) {
+    hideVideo();
+    setViewportMode("image");
     img.src = `/api/screenshots/${id}?t=${Date.now()}`;
     img.hidden = false;
     return;
   }
 
-  playClip(item, mime);
+  playClip(item, mime, gen);
 }
 
-async function playClip(item, mime) {
+async function playClip(item, mime, gen) {
   const img = $("#shot-image");
-  const video = $("#shot-video");
-  stopSeq();
+  hideVideo();
   img.hidden = true;
+  setViewportMode("video");
+  const video = $("#shot-video");
   if (mime && mime.startsWith("video/")) {
-    video.srcObject = null;
+    if (gen !== shotGen) return;
     video.src = `/api/screenshots/${item.id}?t=${Date.now()}`;
     video.hidden = false;
-    video.play().catch(() => playSequence(item));
+    video.play().catch(() => playSequence(item, gen));
     return;
   }
-  const played = await playSequence(item);
+  const played = await playSequence(item, gen);
+  if (gen !== shotGen) return;
   if (!played) {
+    hideVideo();
+    setViewportMode("image");
     img.src = `/api/screenshots/${item.id}?t=${Date.now()}`;
     img.hidden = false;
-    video.hidden = true;
   }
 }
 
-async function playSequence(item) {
+async function playSequence(item, gen) {
   const video = $("#shot-video");
   const frames = Number(item.frameCount || 0);
-  if (!frames) return false;
+  if (frames <= 1) return false;
   const images = [];
   try {
     for (let i = 0; i < frames; i++) {
+      if (gen !== shotGen) return false;
       const im = new Image();
       im.src = `/api/screenshots/${item.id}/frame/${i}`;
       await im.decode();
@@ -560,6 +703,7 @@ async function playSequence(item) {
   } catch {
     return false;
   }
+  if (gen !== shotGen) return false;
   const canvas = document.createElement("canvas");
   canvas.width = Number(item.width) || images[0].naturalWidth;
   canvas.height = Number(item.height) || images[0].naturalHeight;
@@ -572,6 +716,8 @@ async function playSequence(item) {
   };
   draw();
   if (typeof canvas.captureStream === "function") {
+    if (gen !== shotGen) return false;
+    setViewportMode("video");
     video.srcObject = canvas.captureStream(fps);
     video.removeAttribute("src");
     video.hidden = false;
@@ -587,9 +733,10 @@ async function refreshGallery() {
   const items = g.items || [];
   $("#shot-thumbs").innerHTML = items
     .map((s) => {
-      const thumb = s.kind === "video" ? `/api/screenshots/${esc(s.id)}/poster` : `/api/screenshots/${esc(s.id)}`;
-      const badge = s.kind === "video" ? `<span class="shot-play">▶</span>` : "";
-      return `<button type="button" data-id="${esc(s.id)}" data-kind="${esc(s.kind || "image")}">
+      const asVideo = isPlayableVideo(s);
+      const thumb = asVideo ? `/api/screenshots/${esc(s.id)}/poster` : `/api/screenshots/${esc(s.id)}`;
+      const badge = asVideo ? `<span class="shot-play">▶</span>` : "";
+      return `<button type="button" data-id="${esc(s.id)}" data-kind="${esc(asVideo ? "video" : "image")}">
         <img src="${thumb}" alt="" />${badge}
       </button>`;
     })
@@ -601,9 +748,19 @@ async function refreshGallery() {
       if (found) showShot(found);
     });
   });
+  if (!items.length) {
+    const empty = viewportFrame()?.classList.contains("is-empty");
+    const imgHidden = $("#shot-image").hidden;
+    const videoHidden = $("#shot-video").hidden;
+    if (empty || (imgHidden && videoHidden)) {
+      showEmptyViewport();
+      setMeta("No capture yet");
+    }
+    return;
+  }
   const videoHidden = $("#shot-video").hidden;
   const imgHidden = $("#shot-image").hidden;
-  if (items[0] && imgHidden && videoHidden) showShot(items[0]);
+  if (imgHidden && videoHidden) showShot(items[0]);
 }
 
 $("#shot-capture").addEventListener("click", async () => {
@@ -621,9 +778,7 @@ $("#shot-capture").addEventListener("click", async () => {
   btn.textContent = "Capture";
   if (!r.ok) {
     setMeta("Capture failed");
-    $("#shot-empty").style.display = "";
-    $("#shot-empty").innerHTML = `<strong>Capture failed</strong><span>${esc(r.error)}</span>`;
-    hideViewport();
+    showEmptyViewport("Capture failed", r.error);
     return;
   }
   await refreshGallery();
@@ -633,7 +788,7 @@ $("#shot-capture").addEventListener("click", async () => {
     height: r.height,
     time: Date.now(),
     kind: r.kind || "image",
-    mimeType: r.mimeType,
+    mimeType: r.mimeType || "image/png",
     source: r.source,
     frameCount: r.frames,
     fps: r.fps,
@@ -655,9 +810,7 @@ $("#shot-record").addEventListener("click", async () => {
   btn.textContent = "Record";
   if (!r.ok) {
     setMeta("Record failed");
-    $("#shot-empty").style.display = "";
-    $("#shot-empty").innerHTML = `<strong>Record failed</strong><span>${esc(r.error)}</span>`;
-    hideViewport();
+    showEmptyViewport("Record failed", r.error);
     return;
   }
   await refreshGallery();
@@ -678,9 +831,7 @@ $("#shot-clear").addEventListener("click", async () => {
   await api("/api/screenshots/clear", { method: "POST" });
   $("#shot-thumbs").innerHTML = "";
   $("#shot-thumbs-empty").style.display = "";
-  hideViewport();
-  $("#shot-empty").style.display = "";
-  $("#shot-empty").innerHTML = `<strong>Viewport idle</strong><span>Capture a still or record a short viewport clip with CaptureService, even if Studio is in the background.</span>`;
+  showEmptyViewport();
   setMeta("No capture yet");
 });
 
@@ -788,6 +939,12 @@ $("#shot-refresh-ui").addEventListener("click", async () => {
 $("#registry-search")?.addEventListener("input", () => {
   renderRegistry(toolCatalog);
 });
+
+const topoRoot = $("#topology");
+if (topoRoot && typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(() => scheduleTopoLines()).observe(topoRoot);
+}
+window.addEventListener("resize", scheduleTopoLines);
 
 refreshStatus();
 setInterval(refreshStatus, 2000);

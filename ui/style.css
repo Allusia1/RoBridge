@@ -50,13 +50,7 @@ body {
   z-index: 4;
 }
 
-.brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 22px; }
-.brand-mark {
-  width: 34px; height: 34px; border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-}
+.brand { display: flex; flex-direction: column; padding: 4px 8px 22px; }
 .brand-name { font-weight: 650; font-size: 15px; letter-spacing: -0.02em; }
 .brand-sub { color: var(--text-dim); font-size: 11px; font-family: "IBM Plex Mono", ui-monospace, monospace; }
 
@@ -186,94 +180,208 @@ h2 { font-size: 13px; font-weight: 600; color: var(--text); }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 22px 18px 18px;
+  padding: 20px 20px 22px;
   margin-bottom: 16px;
-  overflow-x: auto;
 }
-.topo-flow {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 0;
-  min-width: 720px;
-}
-.topo-col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 148px;
-  flex: 1;
-}
-.topo-col.narrow { flex: 0.85; }
-.topo-node {
-  border: 1px solid var(--border);
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 12px 13px;
-  min-height: 86px;
-}
-.topo-node.on { border-color: rgba(125, 155, 114, 0.45); }
-.topo-node.off { opacity: 0.55; }
-.topo-node.idle { border-color: rgba(196, 161, 90, 0.4); }
-.topo-kicker {
-  display: block;
-  font-size: 10px;
+.topo-head { margin-bottom: 18px; }
+.topo-title {
+  font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-mute);
-  margin-bottom: 6px;
 }
-.topo-node strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.topo-status {
-  display: block;
-  font-size: 12px;
+.topo-sub {
   color: var(--text-dim);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 5px;
+  max-width: 42em;
 }
-.topo-node.on .topo-status { color: var(--ok); }
-.topo-node.off .topo-status { color: var(--err); }
-.topo-node.idle .topo-status { color: var(--warn); }
-.topo-link-col {
+.topo-canvas {
+  position: relative;
+  min-height: 160px;
+}
+.topo-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;
+}
+.topo-lines line {
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.topo-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+}
+.topo-side {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 36px;
-  flex-shrink: 0;
   gap: 10px;
-  padding: 0 4px;
+  width: 100%;
+  max-width: 280px;
 }
-.topo-link {
-  height: 2px;
-  background: var(--border-strong);
-  position: relative;
+.topo-side.agents { justify-self: start; }
+.topo-side.studios { justify-self: end; }
+.topo-side-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
 }
-.topo-link::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  top: -3px;
+.topo-side-head svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.topo-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 11px;
+  font-weight: 650;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+.topo-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.topo-hub-wrap {
+  justify-self: center;
+  align-self: center;
+  width: 220px;
+}
+.topo-card {
+  background: var(--bg);
+  border: 1px solid rgba(193, 122, 74, 0.38);
+  border-radius: 9px;
+  padding: 12px 13px 11px;
+  min-height: 72px;
+}
+.topo-card:not(.on) {
+  border-color: var(--border);
+  opacity: 0.72;
+}
+.topo-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.topo-card-top strong {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topo-card-meta,
+.topo-card-foot {
+  font-size: 12px;
+  color: var(--text-mute);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  margin-top: 6px;
+  line-height: 1.35;
+}
+.topo-card-foot { margin-top: 8px; font-size: 11.5px; }
+.topo-pill {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-mute);
+}
+.topo-pill.active,
+.topo-pill.edit,
+.topo-pill.play {
+  color: var(--accent);
+  border-color: rgba(193, 122, 74, 0.42);
+  background: var(--accent-soft);
+}
+.topo-dot {
   width: 8px;
   height: 8px;
-  border-right: 2px solid var(--border-strong);
-  border-top: 2px solid var(--border-strong);
-  transform: rotate(45deg);
+  border-radius: 50%;
+  background: var(--text-mute);
+  flex-shrink: 0;
 }
-.topo-link.on {
-  background: var(--accent);
+.topo-dot.on { background: var(--ok); }
+.topo-empty {
+  color: var(--text-mute);
+  font-size: 12px;
+  padding: 16px 4px;
 }
-.topo-link.on::after {
-  border-color: var(--accent);
+.topo-hub {
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 18px 16px 16px;
+  text-align: center;
+  min-height: 148px;
 }
-.topo-link.off {
-  background: repeating-linear-gradient(90deg, var(--border-strong) 0 6px, transparent 6px 10px);
+.topo-hub.off { border-color: var(--border-strong); opacity: 0.75; }
+.topo-hub-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(193, 122, 74, 0.4);
 }
-.topo-link.off::after { opacity: 0.4; }
+.topo-hub-icon svg { width: 20px; height: 20px; }
+.topo-hub strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.topo-hub-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.topo-hub-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-mute);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
 
 .checks {
   display: flex;
@@ -501,7 +609,26 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   background: #05070d; border: 1px solid var(--border); border-radius: var(--radius);
   min-height: 520px; overflow: hidden; position: relative;
 }
-.viewport-frame img, .viewport-frame video { display: block; width: 100%; height: auto; background: #000; }
+.viewport-frame img,
+.viewport-frame video {
+  width: 100%;
+  height: auto;
+  background: #000;
+}
+.viewport-frame img:not([hidden]),
+.viewport-frame video:not([hidden]) {
+  display: block;
+}
+.viewport-frame.is-empty img,
+.viewport-frame.is-empty video,
+.viewport-frame.is-image video,
+.viewport-frame.is-video img {
+  display: none !important;
+}
+.viewport-frame.is-image .viewport-empty,
+.viewport-frame.is-video .viewport-empty {
+  display: none !important;
+}
 .viewport-meta {
   position: absolute; top: 12px; left: 12px; z-index: 1;
   max-width: calc(100% - 24px);
@@ -599,6 +726,20 @@ code {
   .ui-studio-layout, .console-split { grid-template-columns: 1fr; }
   textarea#console-input, .output { min-height: 260px; }
   .session-row { grid-template-columns: 100px 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .topo-grid {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+  }
+  .topo-side,
+  .topo-hub-wrap {
+    justify-self: stretch;
+    max-width: none;
+    width: 100%;
+  }
+  .topo-lines { display: none; }
 }
 
 @media (max-width: 720px) {

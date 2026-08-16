@@ -12,15 +12,8 @@
 <body>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M3 4.5h5.2L4.8 13.5H3L3 4.5zm6.8 0H15v2.1H11.4l-1.1 2.7H15v2.1H9.6L6.8 4.5h3z" fill="currentColor"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-name">RoBridge</div>
-        <div class="brand-sub" id="version">v0.0.0</div>
-      </div>
+      <div class="brand-name">RoBridge</div>
+      <div class="brand-sub" id="version">v0.0.0</div>
     </div>
 
     <nav>
@@ -194,13 +187,13 @@
         </div>
 
         <div class="ui-studio-layout">
-          <div class="viewport-frame">
+          <div class="viewport-frame is-empty">
             <div class="viewport-meta" id="shot-meta">No capture yet</div>
             <img id="shot-image" alt="Studio viewport" hidden />
             <video id="shot-video" controls muted loop playsinline hidden></video>
             <div class="empty-state viewport-empty" id="shot-empty">
-              <strong>Viewport idle</strong>
-              <span>Capture a still or record a short viewport clip with CaptureService, even if Studio is in the background.</span>
+              <strong>No image</strong>
+              <span>No capture yet</span>
             </div>
           </div>
 
