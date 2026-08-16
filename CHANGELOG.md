@@ -4,6 +4,20 @@ Versions follow the MCP server in `package.json` / `src/index.ts`. The Studio pl
 
 ## [Unreleased]
 
+## [0.1.8] — 2026-08-16
+
+Server **0.1.8**, plugin **0.1.9**. Keep the GitHub clone. After `npx robridge update`, reload MCP and refresh Studio plugins.
+
+### Added
+
+- Auto-copy `plugin/RoBridge.lua` into the Roblox Plugins folder on MCP/HTTP start when it is missing or the content/VERSION differs. Logs to stderr only.
+- `npx robridge update` — `git pull --ff-only` then `npm install` from the clone (refuses a dirty tree or a non-git checkout).
+- Dashboard banner and `/api/status` (`updateAvailable`, `latestVersion`) when GitHub’s latest release tag is newer than the local server version. Best-effort; start never fails on a network error.
+
+### Changed
+
+- `npx robridge doctor` FAILs if the installed plugin VERSION does not match the bundled plugin. Next: `npx robridge init` or reload MCP (auto-copy).
+
 ## [0.1.7] — 2026-08-16
 
 Server **0.1.7**, plugin **0.1.9**. MCP schema change: `manage_ui` gained action `scroll`. Reload/reconnect the RoBridge MCP server in Cursor (and other clients) so `tools/list` picks up the new enum.

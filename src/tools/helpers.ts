@@ -63,6 +63,8 @@ export interface ToolContext {
     startedAt: number;
     httpBound: boolean;
     mcp: McpRuntime;
+    updateAvailable: boolean;
+    latestVersion: string | null;
   };
   /** Set around HTTP/dashboard invocations so history can distinguish MCP vs UI. */
   callSource?: CallSource;

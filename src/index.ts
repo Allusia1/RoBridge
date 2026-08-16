@@ -11,9 +11,9 @@ import { registerMediaTools } from "./tools/media.js";
 import { registerUiTools } from "./tools/ui.js";
 import { registerStudioTools } from "./tools/studio.js";
 import { registerExecuteTools } from "./tools/execute.js";
-import { dispatchCli, isCliCommand } from "./cli.js";
+import { checkGithubLatestRelease, dispatchCli, ensurePluginCopied, isCliCommand, pluginDestPath } from "./cli.js";
 
-const VERSION = "0.1.7";
+const VERSION = "0.1.8";
 const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
 const ARGV = process.argv.slice(2);
 
@@ -76,6 +76,8 @@ async function main() {
         proxyCalls: 0,
         lastHeartbeatAt: null,
       },
+      updateAvailable: false,
+      latestVersion: null,
     },
   };
 
@@ -90,6 +92,23 @@ async function main() {
     process.stdout.write(JSON.stringify(catalogPayload(ctx), null, 2) + "\n");
     process.exit(0);
   }
+
+  try {
+    const copied = await ensurePluginCopied();
+    if (copied === "copied") {
+      log(`Plugin copied to ${pluginDestPath()} — refresh Plugins in Studio`);
+    }
+  } catch (err) {
+    log("Plugin auto-copy skipped:", err instanceof Error ? err.message : err);
+  }
+
+  void checkGithubLatestRelease(VERSION).then((info) => {
+    ctx.config.updateAvailable = info.updateAvailable;
+    ctx.config.latestVersion = info.latestVersion;
+    if (info.updateAvailable && info.latestVersion) {
+      log(`${info.latestVersion} available — in your clone: npx robridge update`);
+    }
+  });
 
   const app = createHttpApp(ctx, bridge, history);
   await new Promise<void>((resolve) => {

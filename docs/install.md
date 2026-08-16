@@ -2,7 +2,7 @@
 
 RoBridge is a local checkout. After clone, **`npm install`** is enough: postinstall builds the server and runs `init` (plugin copy + Cursor/Claude/VS Code Copilot MCP configs).
 
-Server **0.1.7**, plugin **0.1.9**. Requires Node **18+**.
+Server **0.1.8**, plugin **0.1.9**. Requires Node **18+**.
 
 ## One-liners
 
@@ -21,6 +21,7 @@ Then reload MCP and open Studio. Postinstall runs `npm run build` and `node dist
 | `npx robridge install-plugin` | Plugin only |
 | `npx robridge mcp` | Write MCP configs only (same merge) + short summary |
 | `npx robridge doctor` | Checklist (Node, dist, plugin, MCP, :3737, Studio) + one next step |
+| `npx robridge update` | `git pull --ff-only` then `npm install` (clean clone) |
 | `robridge` (no args) | MCP stdio server — **Cursor / Claude spawn this** |
 
 If something looks wrong, run `npx robridge doctor` (or `node dist/index.js doctor`). It checks Node 18+, `dist/index.js`, the Studio plugin, Cursor MCP config, optional Claude Desktop, and whether `:3737` / Studio are up, then prints one **Next:** click. It does not start the server.
@@ -28,6 +29,16 @@ If something looks wrong, run `npx robridge doctor` (or `node dist/index.js doct
 If `dist/index.js` is missing, `init` runs `npm run build` for you. If Node is older than 18, it exits with “Install Node 18+”.
 
 Plugin destination: macOS `~/Documents/Roblox/Plugins/RoBridge.lua`; Windows `%LOCALAPPDATA%\Roblox\Plugins\RoBridge.lua`. Then **refresh Plugins in Studio** (or restart Studio).
+
+## Updating
+
+Keep the clone — do not re-clone for a new version.
+
+```bash
+npx robridge update
+```
+
+Requires a clean git checkout. Then reload MCP in Cursor and refresh Studio plugins. On MCP/HTTP start, RoBridge copies the bundled plugin over the Roblox Plugins copy if it is missing or the VERSION/content differs.
 
 ## Steps
 

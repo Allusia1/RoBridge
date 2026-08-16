@@ -21,6 +21,12 @@ import {
   nodeVersionIsSupported,
   pathEndsWithDistIndex,
   pickDoctorNext,
+  compareSemver,
+  luaPluginVersion,
+  pluginNeedsInstall,
+  ensurePluginCopied,
+  checkGithubLatestRelease,
+  runUpdate,
   runDoctor,
   studioFromStatusJson,
   writeClaudeDesktopConfig,
@@ -34,6 +40,7 @@ test("CLI commands are recognized; empty argv is not a CLI command", () => {
   assert.equal(isCliCommand(["install-plugin"]), true);
   assert.equal(isCliCommand(["mcp"]), true);
   assert.equal(isCliCommand(["doctor"]), true);
+  assert.equal(isCliCommand(["update"]), true);
   assert.equal(isCliCommand(["--help"]), true);
   assert.equal(isCliCommand([]), false);
   assert.equal(isCliCommand(["--dump-catalog"]), false);
@@ -59,6 +66,7 @@ test("help lists dummy-proof commands and does not tell users to start the serve
   assert.match(help, /install-plugin/);
   assert.match(help, /\bmcp\b/);
   assert.match(help, /npx robridge doctor/);
+  assert.match(help, /npx robridge update/);
   assert.match(help, /Settings → MCP/);
   assert.match(help, /Official Studio MCP is optional/);
   assert.match(help, /First run:\s*\n\s*npm install\s*$/m);
@@ -292,6 +300,7 @@ test("doctor runDoctor prints checklist and one Next without starting a server",
     nodeVersion: process.version,
     serverEntry: dist,
     pluginPath: plugin,
+    bundledPluginPath: plugin,
     cursorUserPath: userMcp,
     cursorProjectPath: projectMcp,
     claudeDesktopPath: path.join(dir, "missing-claude.json"),
@@ -316,6 +325,7 @@ test("doctor runDoctor prints checklist and one Next without starting a server",
     nodeVersion: process.version,
     serverEntry: dist,
     pluginPath: plugin,
+    bundledPluginPath: plugin,
     cursorUserPath: userMcp,
     cursorProjectPath: projectMcp,
     claudeDesktopPath: null,
@@ -386,6 +396,7 @@ test("doctor warns when official Roblox_Studio sits beside RoBridge", async () =
     nodeVersion: process.version,
     serverEntry: dist,
     pluginPath: plugin,
+    bundledPluginPath: plugin,
     cursorUserPath: userMcp,
     cursorProjectPath: path.join(dir, "missing-project.json"),
     claudeDesktopPath: null,
@@ -398,5 +409,149 @@ test("doctor warns when official Roblox_Studio sits beside RoBridge", async () =
   assert.match(report.text, /WARN Official Roblox Studio MCP \(Roblox_Studio\) is also configured/);
   assert.match(report.text, /complementary, not a replacement/);
   assert.equal(report.nextKind, "reload");
+});
+
+test("semver compare strips v and orders major.minor.patch", () => {
+  assert.equal(compareSemver("0.1.8", "0.1.7"), 1);
+  assert.equal(compareSemver("v0.1.7", "0.1.7"), 0);
+  assert.equal(compareSemver("0.1.6", "0.1.7"), -1);
+  assert.equal(compareSemver("0.2.0", "0.1.9"), 1);
+});
+
+test("luaPluginVersion reads VERSION from plugin source", () => {
+  assert.equal(luaPluginVersion('local VERSION = "0.1.9"\n'), "0.1.9");
+  assert.equal(luaPluginVersion("-- no version\n"), null);
+});
+
+test("pluginNeedsInstall is true when dest is missing or content/VERSION differs", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "robridge-plugin-"));
+  const src = path.join(dir, "src.lua");
+  const dest = path.join(dir, "dest.lua");
+  await writeFile(src, 'local VERSION = "0.1.9"\nprint("a")\n');
+  assert.equal(await pluginNeedsInstall(src, dest), true);
+  await writeFile(dest, 'local VERSION = "0.1.9"\nprint("a")\n');
+  assert.equal(await pluginNeedsInstall(src, dest), false);
+  await writeFile(dest, 'local VERSION = "0.1.8"\nprint("a")\n');
+  assert.equal(await pluginNeedsInstall(src, dest), true);
+});
+
+test("ensurePluginCopied copies once then is unchanged", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "robridge-ensure-"));
+  const src = path.join(dir, "src.lua");
+  const dest = path.join(dir, "Plugins", "RoBridge.lua");
+  await writeFile(src, 'local VERSION = "0.1.9"\n');
+  assert.equal(await ensurePluginCopied({ src, dest }), "copied");
+  assert.equal(await readFile(dest, "utf8"), 'local VERSION = "0.1.9"\n');
+  assert.equal(await ensurePluginCopied({ src, dest }), "unchanged");
+  assert.equal(await ensurePluginCopied({ src, dest: null }), "skipped");
+});
+
+test("checkGithubLatestRelease sets updateAvailable when tag is newer", async () => {
+  const newer = await checkGithubLatestRelease("0.1.7", {
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ tag_name: "v0.1.8" }), { status: 200 }),
+  });
+  assert.deepEqual(newer, { updateAvailable: true, latestVersion: "0.1.8" });
+
+  const same = await checkGithubLatestRelease("0.1.8", {
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ tag_name: "v0.1.8" }), { status: 200 }),
+  });
+  assert.deepEqual(same, { updateAvailable: false, latestVersion: "0.1.8" });
+
+  const fail = await checkGithubLatestRelease("0.1.7", {
+    fetchImpl: async () => {
+      throw new Error("network down");
+    },
+  });
+  assert.deepEqual(fail, { updateAvailable: false, latestVersion: null });
+});
+
+test("runUpdate refuses a non-git tree and a dirty tree", async () => {
+  const lines = [];
+  await assert.rejects(
+    () =>
+      runUpdate({
+        root: "/tmp/not-a-clone",
+        out: (t) => lines.push(t),
+        git: () => ({ status: 128, stdout: "", stderr: "not a git repository" }),
+        npmInstall: () => ({ status: 0, stdout: "", stderr: "" }),
+      }),
+    /Not a git clone/,
+  );
+
+  await assert.rejects(
+    () =>
+      runUpdate({
+        root: "/tmp/clone",
+        out: (t) => lines.push(t),
+        git: (args) => {
+          if (args[0] === "rev-parse") return { status: 0, stdout: "true\n", stderr: "" };
+          if (args[0] === "status") return { status: 0, stdout: " M src/cli.ts\n", stderr: "" };
+          return { status: 1, stdout: "", stderr: "unexpected" };
+        },
+        npmInstall: () => ({ status: 0, stdout: "", stderr: "" }),
+      }),
+    /Working tree is dirty/,
+  );
+});
+
+test("runUpdate pulls then npm install and tells the user to reload", async () => {
+  const lines = [];
+  const gitCalls = [];
+  await runUpdate({
+    root: "/tmp/clone",
+    out: (t) => lines.push(t),
+    git: (args) => {
+      gitCalls.push(args[0]);
+      if (args[0] === "rev-parse") return { status: 0, stdout: "true\n", stderr: "" };
+      if (args[0] === "status") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "pull") return { status: 0, stdout: "Already up to date.\n", stderr: "" };
+      return { status: 1, stdout: "", stderr: "unexpected" };
+    },
+    npmInstall: () => ({ status: 0, stdout: "", stderr: "" }),
+  });
+  assert.deepEqual(gitCalls, ["rev-parse", "status", "pull"]);
+  assert.match(lines.join("\n"), /git pull --ff-only/);
+  assert.match(lines.join("\n"), /npm install/);
+  assert.match(lines.join("\n"), /Reload the RoBridge MCP server/);
+  assert.match(lines.join("\n"), /refresh Plugins in Studio/);
+});
+
+test("doctor FAILs when dest plugin VERSION differs from bundled", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "robridge-doctor-ver-"));
+  const dist = path.join(dir, "dist", "index.js");
+  await mkdir(path.dirname(dist), { recursive: true });
+  await writeFile(dist, "export {}\n");
+  const dest = path.join(dir, "dest.lua");
+  const bundled = path.join(dir, "bundled.lua");
+  await writeFile(dest, 'local VERSION = "0.1.8"\n');
+  await writeFile(bundled, 'local VERSION = "0.1.9"\n');
+  const userMcp = path.join(dir, "user-mcp.json");
+  await writeFile(
+    userMcp,
+    JSON.stringify({
+      mcpServers: { RoBridge: { command: process.execPath, args: [dist] } },
+    }),
+  );
+
+  const report = await runDoctor({
+    nodeVersion: process.version,
+    serverEntry: dist,
+    pluginPath: dest,
+    bundledPluginPath: bundled,
+    cursorUserPath: userMcp,
+    cursorProjectPath: path.join(dir, "missing-project.json"),
+    claudeDesktopPath: null,
+    port: 3737,
+    fileExists: existsSync,
+    readText: (p) => readFile(p, "utf8"),
+    probeHttp: async () => ({ up: false, dashboardUrl: "http://127.0.0.1:3737", json: null }),
+  });
+
+  assert.equal(report.nextKind, "plugin");
+  assert.match(report.text, /FAIL\s+Plugin/);
+  assert.match(report.text, /VERSION 0\.1\.8 ≠ bundled 0\.1\.9/);
+  assert.match(report.text, /npx robridge init \(or reload MCP to auto-copy the plugin\)/);
 });
 

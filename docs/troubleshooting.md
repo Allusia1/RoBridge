@@ -49,6 +49,10 @@ If Cursor/Claude tools look like `script_read` / `search_game_tree` instead of `
 
 Expected. The first process owns `:3737`; the second forwards to it. Both share the plugin session. Stop the owner if the dashboard looks stale.
 
+## Updating / plugin VERSION mismatch
+
+From the clone: `npx robridge update`, then reload MCP and refresh Studio plugins. Do not re-clone. `doctor` FAILs if the installed plugin VERSION does not match the bundled copy — run `npx robridge init` or reload MCP (auto-copy on start). The dashboard banner (`x.y.z available — in your clone: npx robridge update`) means GitHub has a newer release than this checkout.
+
 ## Common messages
 
 | Error | Fix |

@@ -1,6 +1,6 @@
 # Tools
 
-24 tools from `defineTool` in `src/tools`. Server **0.1.7**, plugin **0.1.9**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
+24 tools from `defineTool` in `src/tools`. Server **0.1.8**, plugin **0.1.9**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
 
 Regenerate this page: `node scripts/extract-tool-catalog.mjs`.
 

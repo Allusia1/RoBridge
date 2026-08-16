@@ -129,6 +129,25 @@ nav { display: flex; flex-direction: column; gap: 3px; }
 .mode-badge.offline { color: var(--err); border-color: rgba(192, 122, 114, 0.35); background: var(--err-soft); }
 .mode-badge.disconnected { color: var(--text-mute); border-color: var(--border); }
 
+.update-banner {
+  display: none;
+  padding: 9px 28px;
+  font-size: 13px;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-bottom: 1px solid rgba(196, 161, 90, 0.28);
+}
+.update-banner:not([hidden]) { display: block; }
+.update-banner code {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text);
+}
+
 main { padding: 28px 32px 48px; max-width: 1180px; }
 main:has(#tab-ui-studio.active),
 main:has(#tab-console.active) { max-width: 1440px; }

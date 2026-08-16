@@ -25,7 +25,7 @@ body:
     attributes:
       label: Versions
       description: Server (`package.json`) and plugin (`plugin/RoBridge.lua` VERSION)
-      placeholder: "server 0.1.7, plugin 0.1.9"
+      placeholder: "server 0.1.8, plugin 0.1.9"
     validations:
       required: true
   - type: textarea

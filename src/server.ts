@@ -108,6 +108,8 @@ export function createHttpApp(ctx: ToolContext, bridge: Bridge, history: History
       studioConnected: bridge.isConnected(),
       playConnected: bridge.isPlayConnected(),
       httpOnly: mcp.transport === "none",
+      updateAvailable: ctx.config.updateAvailable,
+      latestVersion: ctx.config.latestVersion,
       preflight: preflight ?? null,
       fixes: compactFixes({
         studioConnected: bridge.isConnected(),

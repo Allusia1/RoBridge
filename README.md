@@ -1,10 +1,10 @@
 # RoBridge
 
-[![version](https://img.shields.io/badge/server-0.1.7-c17a4a)](docs/README.md)
+[![version](https://img.shields.io/badge/server-0.1.8-c17a4a)](docs/README.md)
 [![plugin](https://img.shields.io/badge/plugin-0.1.9-7d9b72)](plugin/RoBridge.lua)
 [![tools](https://img.shields.io/badge/tools-24%20free-181714)](docs/tools.md)
 [![license](https://img.shields.io/badge/license-MIT-6f6a60)](LICENSE)
-[![changelog](https://img.shields.io/badge/changelog-0.1.7-6f6a60)](CHANGELOG.md)
+[![changelog](https://img.shields.io/badge/changelog-0.1.8-6f6a60)](CHANGELOG.md)
 
 A free, open, **local** MCP server that lets AI agents (Cursor, Claude, any MCP client) drive **Roblox Studio** — DataModel, scripts, terrain, lighting, UI, and playtests — plus a dashboard at [http://127.0.0.1:3737](http://127.0.0.1:3737). All tools included. No Pro tier.
 
@@ -31,7 +31,7 @@ Everything lives in this repo (no separate docs site):
 | [Tools](docs/tools.md) | Full action + param reference |
 | [Troubleshooting](docs/troubleshooting.md) | Fix lines, stuck Play |
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
-| [Changelog](CHANGELOG.md) | Server 0.1.7 / plugin 0.1.9 |
+| [Changelog](CHANGELOG.md) | Server 0.1.8 / plugin 0.1.9 |
 
 Clone this repo, then `npm install` (see **First run**).
 
@@ -61,6 +61,16 @@ Unusual clients that cannot be auto-configured: [MCP setup](docs/mcp.md) (fallba
 Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only (you run this yourself): `node dist/index.js --no-mcp`.
 
 One process owns `:3737`. Extra MCP clients (Cursor + Claude together) **forward** to that owner and share the same Studio session.
+
+## Updating
+
+Keep this clone. From the repo root:
+
+```bash
+npx robridge update
+```
+
+That runs `git pull --ff-only` then `npm install` (rebuild + init). The working tree must be clean. Then **reload MCP** and **refresh Studio plugins**. MCP/HTTP start also copies `plugin/RoBridge.lua` into the Roblox Plugins folder if it is missing or out of date. The dashboard shows a banner when a newer GitHub release exists.
 
 ## Tools (24, all free)
 
@@ -138,7 +148,7 @@ See [docs/limits.md](docs/limits.md).
 
 | Path | |
 | --- | --- |
-| `src/` | MCP + HTTP server (`VERSION` 0.1.7) |
+| `src/` | MCP + HTTP server (`VERSION` 0.1.8) |
 | `plugin/` | Studio plugin (`VERSION` 0.1.9) |
 | `ui/` | Dashboard served at [http://127.0.0.1:3737](http://127.0.0.1:3737) |
 | `docs/` | Install, MCP, playtesting, tools, limits |

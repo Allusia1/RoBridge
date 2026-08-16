@@ -415,6 +415,17 @@ async function refreshStatus() {
       ? `${s.toolCount || 0} tools · ${actionCount} actions`
       : `${s.toolCount || 0} tools`;
 
+    const banner = $("#update-banner");
+    if (banner) {
+      if (s.updateAvailable && s.latestVersion) {
+        banner.hidden = false;
+        banner.innerHTML = `${esc(s.latestVersion)} available — in your clone: <code>npx robridge update</code>`;
+      } else {
+        banner.hidden = true;
+        banner.textContent = "";
+      }
+    }
+
     const hist = s.history || {};
     $("#ov-calls").textContent = hist.total ?? 0;
     const parts = [];
@@ -473,6 +484,11 @@ async function refreshStatus() {
     $("#top-mode").textContent = "offline";
     $("#top-mode").className = "mode-badge offline";
     $("#top-place").textContent = "—";
+    const banner = $("#update-banner");
+    if (banner) {
+      banner.hidden = true;
+      banner.textContent = "";
+    }
     renderOverviewHero({ version: "—", port: "—", mcp: {}, bridge: { sessions: [] } }, false);
   }
 }

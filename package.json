@@ -1,6 +1,6 @@
 {
   "name": "robridge",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "RoBridge — local MCP server + web dashboard bridging AI agents to Roblox Studio",
   "type": "module",
@@ -17,6 +17,7 @@
     "init": "node dist/index.js init",
     "mcp": "node dist/index.js mcp",
     "doctor": "node dist/index.js doctor",
+    "update": "node dist/index.js update",
     "catalog": "node scripts/extract-tool-catalog.mjs",
     "test": "npm run test:schema && npm run test:hints && npm run test:cli && npm run test:mcp && npm run test:bridge",
     "test:cli": "node --test scripts/cli-init-test.mjs",

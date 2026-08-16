@@ -11,10 +11,14 @@ export const CLI_COMMANDS = new Set([
   "install",
   "mcp",
   "doctor",
+  "update",
   "help",
   "--help",
   "-h",
 ]);
+
+export const GITHUB_LATEST_RELEASE_URL =
+  "https://api.github.com/repos/Allusia1/RoBridge/releases/latest";
 
 const PLUGIN_NAME = "RoBridge.lua";
 const SERVER_NAME = "RoBridge";
@@ -332,12 +336,14 @@ export function formatHelp(serverEntry = serverEntryPath()): string {
 Usage:
   robridge                         MCP stdio server (Cursor / Claude spawn this)
   npx robridge init                Dummy-proof setup: plugin + write MCP configs
+  npx robridge update              git pull --ff-only + npm install (clone only)
   npx robridge doctor              Checklist + one next step (does not start the server)
 
 Commands:
   init, install                    Install the plugin and write Cursor / Claude / VS Code configs
   install-plugin                   Copy plugin/RoBridge.lua into the Roblox Plugins folder
   mcp                              Write MCP configs only (merge) and print a short summary
+  update                           git pull --ff-only then npm install (clean clone required)
   doctor                           Check Node, dist, plugin, MCP configs, :3737, Studio
   --help, -h                       Show this help
 
@@ -468,6 +474,173 @@ export async function installPlugin(): Promise<string> {
   return dest;
 }
 
+export function luaPluginVersion(source: string): string | null {
+  const match = source.match(/VERSION\s*=\s*"([^"]+)"/);
+  return match?.[1] ?? null;
+}
+
+export function normalizeVersion(value: string): string {
+  return value.trim().replace(/^v/i, "");
+}
+
+/** -1 if a < b, 0 if equal, 1 if a > b. Compares major.minor.patch; strips a leading v. */
+export function compareSemver(a: string, b: string): number {
+  const pa = normalizeVersion(a).split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const pb = normalizeVersion(b).split(".").map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    const da = pa[i] ?? 0;
+    const db = pb[i] ?? 0;
+    if (da !== db) return da < db ? -1 : 1;
+  }
+  return 0;
+}
+
+export async function pluginNeedsInstall(
+  src = pluginSourcePath(),
+  dest = pluginDestPath(),
+): Promise<boolean> {
+  if (!dest) return false;
+  try {
+    await access(src);
+  } catch {
+    return false;
+  }
+  try {
+    await access(dest);
+  } catch {
+    return true;
+  }
+  const [srcText, destText] = await Promise.all([readFile(src, "utf8"), readFile(dest, "utf8")]);
+  if (srcText !== destText) return true;
+  return luaPluginVersion(srcText) !== luaPluginVersion(destText);
+}
+
+export async function ensurePluginCopied(options?: {
+  src?: string;
+  dest?: string | null;
+  copy?: () => Promise<string>;
+}): Promise<"copied" | "unchanged" | "skipped"> {
+  const dest = options?.dest === undefined ? pluginDestPath() : options.dest;
+  const src = options?.src ?? pluginSourcePath();
+  if (!dest) return "skipped";
+  if (!(await pluginNeedsInstall(src, dest))) return "unchanged";
+  if (options?.copy) {
+    await options.copy();
+  } else if (src === pluginSourcePath() && dest === pluginDestPath()) {
+    await installPlugin();
+  } else {
+    await mkdir(path.dirname(dest), { recursive: true });
+    await copyFile(src, dest);
+  }
+  return "copied";
+}
+
+export type GithubUpdateInfo = {
+  updateAvailable: boolean;
+  latestVersion: string | null;
+};
+
+export async function checkGithubLatestRelease(
+  localVersion: string,
+  options?: {
+    fetchImpl?: typeof fetch;
+    timeoutMs?: number;
+    url?: string;
+  },
+): Promise<GithubUpdateInfo> {
+  const none: GithubUpdateInfo = { updateAvailable: false, latestVersion: null };
+  try {
+    const fetcher = options?.fetchImpl ?? fetch;
+    const res = await fetcher(options?.url ?? GITHUB_LATEST_RELEASE_URL, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "RoBridge",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      signal: AbortSignal.timeout(options?.timeoutMs ?? 2500),
+    });
+    if (!res.ok) return none;
+    const json: unknown = await res.json();
+    if (json === null || typeof json !== "object" || Array.isArray(json)) return none;
+    const tag = (json as Record<string, unknown>).tag_name;
+    if (typeof tag !== "string" || tag.length === 0) return none;
+    const latestVersion = normalizeVersion(tag);
+    return {
+      latestVersion,
+      updateAvailable: compareSemver(latestVersion, localVersion) > 0,
+    };
+  } catch {
+    return none;
+  }
+}
+
+export type GitSpawnResult = {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+};
+
+export async function runUpdate(deps: {
+  root?: string;
+  out?: (text: string) => void;
+  git?: (args: string[], cwd: string) => GitSpawnResult;
+  npmInstall?: (cwd: string) => GitSpawnResult;
+} = {}): Promise<void> {
+  const root = deps.root ?? packageRoot();
+  const write = deps.out ?? out;
+  const git =
+    deps.git ??
+    ((args, cwd) => {
+      const result = spawnSync("git", args, { cwd, encoding: "utf8", windowsHide: true });
+      return {
+        status: result.status,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+      };
+    });
+  const npmInstall =
+    deps.npmInstall ??
+    ((cwd) => {
+      const result = spawnSync("npm", ["install"], {
+        cwd,
+        stdio: "inherit",
+        shell: platform() === "win32",
+        windowsHide: true,
+      });
+      return { status: result.status, stdout: "", stderr: "" };
+    });
+
+  const inside = git(["rev-parse", "--is-inside-work-tree"], root);
+  if (inside.status !== 0 || inside.stdout.trim() !== "true") {
+    throw new Error(
+      "Not a git clone. RoBridge updates from a GitHub checkout — clone https://github.com/Allusia1/RoBridge.git and run npx robridge update from that directory.",
+    );
+  }
+
+  const status = git(["status", "--porcelain"], root);
+  if (status.status !== 0) {
+    throw new Error(status.stderr.trim() || "git status failed.");
+  }
+  if (status.stdout.trim().length > 0) {
+    throw new Error("Working tree is dirty. Commit or stash changes, then retry npx robridge update.");
+  }
+
+  write("git pull --ff-only…");
+  const pull = git(["pull", "--ff-only"], root);
+  if (pull.status !== 0) {
+    throw new Error(pull.stderr.trim() || pull.stdout.trim() || "git pull --ff-only failed.");
+  }
+  if (pull.stdout.trim()) write(pull.stdout.trimEnd());
+
+  write("npm install…");
+  const install = npmInstall(root);
+  if (install.status !== 0) {
+    throw new Error("npm install failed.");
+  }
+
+  write("Updated. Reload the RoBridge MCP server in Cursor (Settings → MCP), then refresh Plugins in Studio.");
+}
+
 function printPluginInstalled(dest: string): void {
   out(`Installed RoBridge plugin to: ${dest}`);
   out("Refresh Plugins in Studio (or restart Studio).");
@@ -492,6 +665,7 @@ export type DoctorDeps = {
   nodeVersion?: string;
   serverEntry?: string;
   pluginPath?: string | null;
+  bundledPluginPath?: string;
   cursorUserPath?: string;
   cursorProjectPath?: string;
   claudeDesktopPath?: string | null;
@@ -510,7 +684,7 @@ export type DoctorReport = {
 export const DOCTOR_NEXT: Record<DoctorNextKind, string> = {
   node: "Install Node 18+ from https://nodejs.org",
   dist: "npm install or npm run build",
-  plugin: "npx robridge init",
+  plugin: "npx robridge init (or reload MCP to auto-copy the plugin)",
   mcp: "npx robridge init",
   reload: "Reload MCP in Cursor (Settings → MCP → RoBridge)",
   studio: "Open Roblox Studio, Allow HTTP to 127.0.0.1, refresh Plugins",
@@ -728,6 +902,7 @@ export async function runDoctor(deps: DoctorDeps = {}): Promise<DoctorReport> {
   const nodeVersion = deps.nodeVersion ?? process.version;
   const serverEntry = deps.serverEntry ?? serverEntryPath();
   const pluginPath = deps.pluginPath === undefined ? pluginDestPath() : deps.pluginPath;
+  const bundledPluginPath = deps.bundledPluginPath ?? pluginSourcePath();
   const cursorUserPath = deps.cursorUserPath ?? cursorUserMcpPath();
   const cursorProjectPath = deps.cursorProjectPath ?? cursorProjectMcpPath();
   const claudeDesktopPath =
@@ -761,11 +936,34 @@ export async function runDoctor(deps: DoctorDeps = {}): Promise<DoctorReport> {
       title: "Plugin",
       detail: "unsupported platform — copy plugin/RoBridge.lua into the Roblox Plugins folder manually",
     });
-  } else if (fileExists(pluginPath)) {
-    lines.push({ status: "OK", title: "Plugin", detail: pluginPath });
-  } else {
+  } else if (!fileExists(pluginPath)) {
     pluginFail = true;
     lines.push({ status: "FAIL", title: "Plugin", detail: `missing ${pluginPath}` });
+  } else {
+    let destVer: string | null = null;
+    let bundledVer: string | null = null;
+    try {
+      destVer = luaPluginVersion(await readText(pluginPath));
+    } catch {
+      destVer = null;
+    }
+    if (fileExists(bundledPluginPath)) {
+      try {
+        bundledVer = luaPluginVersion(await readText(bundledPluginPath));
+      } catch {
+        bundledVer = null;
+      }
+    }
+    if (bundledVer != null && destVer !== bundledVer) {
+      pluginFail = true;
+      lines.push({
+        status: "FAIL",
+        title: "Plugin",
+        detail: `VERSION ${destVer ?? "missing"} ≠ bundled ${bundledVer} — ${pluginPath}`,
+      });
+    } else {
+      lines.push({ status: "OK", title: "Plugin", detail: pluginPath });
+    }
   }
 
   const userMcp = await readJsonObjectFile(cursorUserPath, readText, fileExists);
@@ -912,6 +1110,10 @@ export async function dispatchCli(argv: string[]): Promise<number> {
         return await runInit(true);
       case "mcp":
         return await runInit(false);
+      case "update":
+        assertNode18();
+        await runUpdate();
+        return 0;
       case "doctor": {
         const report = await runDoctor();
         out(report.text);
