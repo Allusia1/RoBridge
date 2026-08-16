@@ -14,11 +14,15 @@ import { registerExecuteTools } from "./tools/execute.js";
 
 const VERSION = "0.1.6";
 const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
-const NO_MCP = process.argv.includes("--no-mcp"); // run HTTP-only (dashboard/bridge without an agent)
-const DUMP_CATALOG = process.argv.includes("--dump-catalog");
+const NO_MCP = process.argv.includes("--no-mcp"); // HTTP dashboard/bridge only — never put this in an MCP client spawn
+const DUMP_CATALOG = process.argv.includes("--dump-catalog"); // CLI JSON dump — never put this in an MCP client spawn
 
-// stdout is reserved for the MCP protocol; log to stderr only.
+// MCP stdio clients (Claude Desktop, Claude Code, Cursor, …) require stdout = JSON-RPC only.
+// Any console.log banner or catalog dump on the MCP path breaks the handshake.
 const log = (...args: unknown[]) => console.error("[RoBridge]", ...args);
+console.log = log;
+console.info = log;
+console.debug = log;
 
 async function main() {
   const bridge = new Bridge();
@@ -82,7 +86,8 @@ async function main() {
     ctx.config.mcp.stdioConnected = true;
     ctx.config.mcp.lastClientAt = Date.now();
     ctx.config.mcp.lastClientSource = "stdio";
-    server.sendToolListChanged();
+    // Do not send tools/list_changed here — that notification before initialize
+    // breaks Claude Desktop / Claude Code. tools/list after handshake is enough.
     log(`MCP server connected via stdio (${ctx.registry.size} tools)`);
   } else {
     log("Running in HTTP-only mode (--no-mcp)");

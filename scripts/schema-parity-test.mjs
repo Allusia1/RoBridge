@@ -105,9 +105,11 @@ async function dumpCatalog() {
   if (code !== 0) {
     throw new Error(`--dump-catalog exited ${code}: ${stderr || stdout}`);
   }
-  const start = stdout.indexOf("{");
-  if (start < 0) throw new Error(`--dump-catalog produced no JSON: ${stdout || stderr}`);
-  return JSON.parse(stdout.slice(start));
+  const trimmed = stdout.trim();
+  if (!trimmed.startsWith("{")) {
+    throw new Error(`--dump-catalog stdout must be JSON only (MCP clients break on banners): ${stdout || stderr}`);
+  }
+  return JSON.parse(trimmed);
 }
 
 async function parseHandlers() {

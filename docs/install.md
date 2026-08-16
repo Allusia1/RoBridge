@@ -29,7 +29,7 @@ Server **0.1.6**, plugin **0.1.8**.
 
 6. **Allow HTTP Requests** in Game Settings → Security if you will playtest. Play-mode agents poll the same local server; `play_start` also tries to set `HttpService.HttpEnabled`.
 
-7. **Register MCP** in `~/.cursor/mcp.json` — see [MCP setup](mcp.md). Reload the RoBridge MCP server in Cursor after each rebuild.
+7. **Register MCP** — see [MCP setup](mcp.md) for Cursor, Claude Desktop, Claude Code, and generic stdio clients. Use an absolute path to `dist/index.js` (this repo is not on npm). Reload the server after each rebuild.
 
 8. **Open the dashboard** at [http://127.0.0.1:3737](http://127.0.0.1:3737). Studio connected + place name means you are done.
 
@@ -39,11 +39,11 @@ Server **0.1.6**, plugin **0.1.8**.
 node dist/index.js --no-mcp
 ```
 
-HTTP dashboard and plugin bridge without stdio MCP. Useful to confirm the plugin before wiring Cursor.
+HTTP dashboard and plugin bridge without stdio MCP. Useful to confirm the plugin before wiring a client. Do not add `--no-mcp` to an MCP client spawn.
 
 ## One process owns the port
 
-The first RoBridge process binds `127.0.0.1:3737`. A second `node dist/index.js` on the same port does not start another dashboard — it **forwards** MCP tool calls to the instance that already holds the port. Quit the owner if you need a clean restart.
+The first RoBridge process binds `127.0.0.1:3737`. A second `node dist/index.js` on the same port does not start another dashboard — it **forwards** MCP tool calls to the instance that already holds the port. Cursor and Claude can run at once against the same Studio session. Quit the owner if you need a clean restart.
 
 ## Verify
 

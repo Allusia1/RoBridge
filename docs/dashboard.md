@@ -14,7 +14,7 @@ The MCP server serves a local dashboard at [http://127.0.0.1:3737](http://127.0.
 
 After install, confirm in this order:
 
-1. Cursor (or your client) actually spawned RoBridge — dashboard loads.
+1. Your MCP client actually spawned RoBridge — dashboard loads.
 2. Roblox Studio is open on the place you care about; plugin toolbar button exists.
 3. Dashboard Overview shows the place name, not “No Studio connected”.
 
@@ -22,7 +22,7 @@ Plugin not listed? Restart Studio after `npm run install-plugin`. HTTP prompt de
 
 ## Port already in use
 
-One RoBridge process owns `3737`. If Cursor starts a second copy, that copy forwards MCP tools to the owner and does not bind HTTP again. Open the dashboard on the original process. To restart cleanly, quit the owner (stop the MCP server in Cursor, or kill the Node process) and start once.
+One RoBridge process owns `3737`. If a second client (Cursor + Claude, two windows) starts another copy, that copy forwards MCP tools to the owner and does not bind HTTP again. Open the dashboard on the original process. To restart cleanly, quit the owner (stop the MCP server in the first client, or kill the Node process) and start once.
 
 ## Live tool catalog
 

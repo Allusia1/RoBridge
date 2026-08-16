@@ -4,7 +4,7 @@ Honest constraints. RoBridge does not pretend to be a hosted cloud or a Pro SKU.
 
 ## One port
 
-Dashboard + plugin bridge bind `127.0.0.1:3737` (override with `ROBRIDGE_PORT`). The first process owns the port. Later MCP clients on the same port forward tool calls to that owner — they do not start a second dashboard. Not a multi-Studio router: keep the place you want to edit open.
+Dashboard + plugin bridge bind `127.0.0.1:3737` (override with `ROBRIDGE_PORT`). The first process owns the port. Later MCP clients on the same port forward tool calls to that owner — they do not start a second dashboard. Cursor and Claude can share one Studio session this way. Not a multi-Studio router: keep the place you want to edit open.
 
 ## Open Cloud upload is not included
 

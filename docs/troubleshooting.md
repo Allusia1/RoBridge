@@ -33,7 +33,15 @@ One process owns the dashboard. A second MCP spawn forwards tools to that owner.
 
 ## MCP client does not see new tools
 
-Rebuild (`npm run build`) and restart the RoBridge MCP server in Cursor so `tools/list` refreshes.
+Rebuild (`npm run build`) and restart the RoBridge MCP server in the client so `tools/list` refreshes. Cursor: Settings → MCP → restart. Claude Desktop: fully quit and reopen. Claude Code: `/mcp` or restart the session.
+
+## Claude Desktop / Claude Code fails to connect
+
+Stdout must be JSON-RPC only. RoBridge logs to stderr; do not add `--dump-catalog` or `--no-mcp` to the client spawn. GUI apps often lack `node` on `PATH` — use the absolute Node binary (`which node` / `where.exe node`). Claude Desktop logs: macOS `~/Library/Logs/Claude/mcp-server-RoBridge.log`.
+
+## Two clients, one Studio
+
+Expected. The first process owns `:3737`; the second forwards to it. Both share the plugin session. Stop the owner if the dashboard looks stale.
 
 ## Common messages
 

@@ -23,7 +23,7 @@ Everything lives in this repo (no separate docs site):
 | | |
 | --- | --- |
 | [Install](docs/install.md) | Build, plugin, HTTP, Mesh/Image APIs |
-| [MCP setup](docs/mcp.md) | Cursor `mcp.json`, catalog dump |
+| [MCP setup](docs/mcp.md) | Cursor, Claude Desktop, Claude Code, generic stdio |
 | [Playtesting](docs/playtesting.md) | `run_test`, Play/Run, input |
 | [Dashboard](docs/dashboard.md) | Local UI on `:3737` |
 | [Tools](docs/tools.md) | Full action + param reference |
@@ -32,6 +32,10 @@ Everything lives in this repo (no separate docs site):
 | [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.8 |
 
 Clone this repo and run it locally. It is **not** published to the public npm registry.
+
+## Works with
+
+Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). Same spawn: `node` + absolute path to `dist/index.js`. Config files and reload notes: [docs/mcp.md](docs/mcp.md).
 
 ## First run
 
@@ -56,11 +60,11 @@ Register the MCP server in `~/.cursor/mcp.json` with an **absolute path**:
 }
 ```
 
-Reload RoBridge in Cursor (Settings → MCP → restart) after each rebuild so `tools/list` updates.
+Other clients (Claude Desktop, Claude Code, VS Code Copilot): [MCP setup](docs/mcp.md). Reload the MCP server after each rebuild. Claude Desktop: fully quit and reopen.
 
 Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only: `node dist/index.js --no-mcp`.
 
-One process owns `:3737`. Extra MCP clients **forward** to that owner.
+One process owns `:3737`. Extra MCP clients (Cursor + Claude together) **forward** to that owner and share the same Studio session.
 
 ## Tools (24, all free)
 
