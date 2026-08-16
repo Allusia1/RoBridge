@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in the MCP server, plugin, or dashboard is wrong
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [troubleshooting](https://github.com/Allusia1/RoBridge/blob/main/docs/troubleshooting.md) and `system_info` action `preflight` first.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - MCP server
+        - Studio plugin
+        - Dashboard (:3737)
+        - Docs
+        - Tests / CI
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Server (`package.json`) and plugin (`plugin/RoBridge.lua` VERSION)
+      placeholder: "server 0.1.6, plugin 0.1.8"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Expected vs actual. Include tool name and action if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      placeholder: |
+        1. npm run build
+        2. Open Studio with the plugin
+        3. Call …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error
+      description: MCP error (including any `Fix:` line), Studio Output, or dashboard message. Do not paste tokens or `.env` values.

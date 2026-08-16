@@ -5,6 +5,9 @@ test-reports/
 gallery/
 .tmp-crate-mvp/
 asset-library/
+web/
+.env
+.env.*
 .DS_Store
 .cursor/*
 !.cursor/rules/

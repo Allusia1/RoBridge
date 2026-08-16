@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a tool, action, or dashboard improvement
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Tool/action names if you have them. Open Cloud upload is out of scope.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - MCP tool
+        - Studio plugin
+        - Dashboard (:3737)
+        - Docs
+        - Other
+    validations:
+      required: true

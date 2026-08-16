@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Docs
+    url: https://github.com/Allusia1/RoBridge/blob/main/docs/README.md
+    about: Install, MCP setup, playtesting, dashboard, tools, troubleshooting
+  - name: Troubleshooting
+    url: https://github.com/Allusia1/RoBridge/blob/main/docs/troubleshooting.md
+    about: Fix lines, stuck Play, CaptureService, port 3737

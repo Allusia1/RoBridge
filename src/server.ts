@@ -225,6 +225,7 @@ export function createHttpApp(ctx: ToolContext, bridge: Bridge, history: History
         height: result.height,
         source: result.source,
         kind: "image",
+        mimeType: "image/png",
         url: result.galleryId ? `/api/screenshots/${result.galleryId}` : "/api/screenshots/latest",
       });
     } catch (err) {

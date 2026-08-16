@@ -4,6 +4,7 @@
 [![plugin](https://img.shields.io/badge/plugin-0.1.8-7d9b72)](plugin/RoBridge.lua)
 [![tools](https://img.shields.io/badge/tools-24%20free-181714)](docs/tools.md)
 [![license](https://img.shields.io/badge/license-MIT-6f6a60)](LICENSE)
+[![changelog](https://img.shields.io/badge/changelog-0.1.6-6f6a60)](CHANGELOG.md)
 
 A free, open, **local** MCP server that lets AI agents (Cursor, Claude, any MCP client) drive **Roblox Studio** — DataModel, scripts, terrain, lighting, UI, and playtests — plus a dashboard at [http://127.0.0.1:3737](http://127.0.0.1:3737). All tools included. No Pro tier.
 
@@ -28,6 +29,9 @@ Everything lives in this repo (no separate docs site):
 | [Tools](docs/tools.md) | Full action + param reference |
 | [Troubleshooting](docs/troubleshooting.md) | Fix lines, stuck Play |
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
+| [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.8 |
+
+Clone this repo and run it locally. It is **not** published to the public npm registry.
 
 ## First run
 
@@ -130,6 +134,18 @@ Tool errors append a `Fix:` line when the server recognizes the failure. Run `sy
 - Not a crate game. The product is the local MCP bridge.
 
 See [docs/limits.md](docs/limits.md).
+
+## Repository
+
+| Path | |
+| --- | --- |
+| `src/` | MCP + HTTP server (`VERSION` 0.1.6) |
+| `plugin/` | Studio plugin (`VERSION` 0.1.8) |
+| `ui/` | Dashboard served at [http://127.0.0.1:3737](http://127.0.0.1:3737) |
+| `docs/` | Install, MCP, playtesting, tools, limits |
+| `scripts/` | Plugin install, catalog extract, tests |
+
+`npm test` runs `test:schema` and `test:hints` (no Studio). Play/UI tests need an open place.
 
 ## License
 

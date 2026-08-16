@@ -1,6 +1,7 @@
 {
   "name": "robridge",
   "version": "0.1.6",
+  "private": true,
   "description": "RoBridge — local MCP server + web dashboard bridging AI agents to Roblox Studio",
   "type": "module",
   "main": "dist/index.js",
@@ -12,6 +13,8 @@
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "install-plugin": "node scripts/install-plugin.mjs",
+    "catalog": "node scripts/extract-tool-catalog.mjs",
+    "test": "npm run test:schema && npm run test:hints",
     "test:mvp": "node scripts/mvp-test.mjs",
     "test:ui": "node scripts/ui-play-test.mjs",
     "test:parity": "node scripts/tools-parity-test.mjs",
@@ -21,6 +24,24 @@
   "engines": {
     "node": ">=18"
   },
+  "files": [
+    "dist",
+    "plugin",
+    "ui",
+    "docs",
+    "scripts/install-plugin.mjs",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Allusia1/RoBridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Allusia1/RoBridge/issues"
+  },
+  "homepage": "https://github.com/Allusia1/RoBridge#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "express": "^4.21.0",
