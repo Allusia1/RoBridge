@@ -1,64 +1,66 @@
 # RoBridge
 
-A free, open, local MCP server that bridges AI agents (Cursor, Claude, any MCP client) to **Roblox Studio** — with a Studio plugin and a local web dashboard. All tools included, no Pro tier.
+[![version](https://img.shields.io/badge/server-0.1.6-c17a4a)](docs/README.md)
+[![plugin](https://img.shields.io/badge/plugin-0.1.8-7d9b72)](plugin/RoBridge.lua)
+[![tools](https://img.shields.io/badge/tools-24%20free-181714)](docs/tools.md)
+[![license](https://img.shields.io/badge/license-MIT-6f6a60)](LICENSE)
 
-**MCP server `{package.json, src/index.ts}`: 0.1.6** · **Studio plugin `plugin/RoBridge.lua`: 0.1.8** · **24 tools**
+A free, open, **local** MCP server that lets AI agents (Cursor, Claude, any MCP client) drive **Roblox Studio** — DataModel, scripts, terrain, lighting, UI, and playtests — plus a dashboard at [http://127.0.0.1:3737](http://127.0.0.1:3737). All tools included. No Pro tier.
 
+```mermaid
+flowchart LR
+  A["AI agent<br/>MCP stdio"] --> B["RoBridge server<br/>:3737"]
+  B --> C["Studio plugin"]
+  C --> D["Your place"]
+  B --> E["Dashboard"]
 ```
-AI Agent (MCP over stdio) ──► RoBridge server ──► HTTP long-poll ──► Studio plugin ──► your place
-                                    │
-                                    └──► Web dashboard at http://127.0.0.1:3737
-```
 
-Docs (this repo): [`web/`](web/) — `cd web && npm install && npm run dev` then open [http://localhost:4000/docs](http://localhost:4000/docs). `/en/docs` is an English alias for `/docs`. No public deploy URL yet.
+## Docs
+
+Everything lives in this repo (no separate docs site):
+
+| | |
+| --- | --- |
+| [Install](docs/install.md) | Build, plugin, HTTP, Mesh/Image APIs |
+| [MCP setup](docs/mcp.md) | Cursor `mcp.json`, catalog dump |
+| [Playtesting](docs/playtesting.md) | `run_test`, Play/Run, input |
+| [Dashboard](docs/dashboard.md) | Local UI on `:3737` |
+| [Tools](docs/tools.md) | Full action + param reference |
+| [Troubleshooting](docs/troubleshooting.md) | Fix lines, stuck Play |
+| [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
 
 ## First run
 
-1. **Install dependencies and build**
+```bash
+npm install
+npm run build
+npm run install-plugin
+```
 
-   ```bash
-   npm install
-   npm run build
-   ```
+Then restart Roblox Studio, **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**.
 
-2. **Install the Studio plugin**
+Register the MCP server in `~/.cursor/mcp.json` with an **absolute path**:
 
-   ```bash
-   npm run install-plugin
-   ```
+```json
+{
+  "mcpServers": {
+    "RoBridge": {
+      "command": "node",
+      "args": ["/absolute/path/to/RoBridge/dist/index.js"]
+    }
+  }
+}
+```
 
-   Then **restart Roblox Studio**. A **RoBridge** toolbar button appears under Plugins — it auto-connects.
+Reload RoBridge in Cursor (Settings → MCP → restart) after each rebuild so `tools/list` updates.
 
-3. **Allow HTTP to `127.0.0.1`** when Studio prompts. The plugin long-polls `http://127.0.0.1:3737`.
+Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only: `node dist/index.js --no-mcp`.
 
-4. **Allow Mesh / Image APIs** if you use viewport screenshots or recordings: File → Game Settings → Security → Allow Mesh / Image APIs (`manage_camera.screenshot` / `record`, CaptureService).
-
-5. **Register the MCP server** in `~/.cursor/mcp.json` (or your MCP client's config). Use an **absolute path**:
-
-   ```json
-   {
-     "mcpServers": {
-       "RoBridge": {
-         "command": "node",
-         "args": ["/absolute/path/to/RoBridge/dist/index.js"]
-       }
-     }
-   }
-   ```
-
-   After `npm run build`, **reload the RoBridge MCP server in Cursor** (Settings → MCP → RoBridge → restart) so `tools/list` picks up new schemas.
-
-6. **Open the dashboard** at [http://127.0.0.1:3737](http://127.0.0.1:3737) — connection status, tool history and stats, a live Luau console, and Studio output logs.
-
-One server owns the port. A second `node dist/index.js` on the same port **forwards** tool calls to the process that already bound `3737` (it does not start a second dashboard).
-
-Dashboard only (no MCP client): `node dist/index.js --no-mcp`.
-
-Dump the shipped catalog (no Studio needed): `node dist/index.js --dump-catalog`. Live HTTP copy: [http://127.0.0.1:3737/api/tools](http://127.0.0.1:3737/api/tools). Schema drift check: `npm run test:schema`.
+One process owns `:3737`. Extra MCP clients **forward** to that owner.
 
 ## Tools (24, all free)
 
-MCP `tools/list` and HTTP `/api/tools` share the same `defineTool` Zod shapes. Action lists below are the shipped enums (aliases included). Full param tables: [docs → Tools](web/).
+MCP `tools/list` and HTTP `/api/tools` share the same `defineTool` Zod shapes. Full param tables: [docs/tools.md](docs/tools.md).
 
 | Tool | Actions |
 | --- | --- |
@@ -87,7 +89,7 @@ MCP `tools/list` and HTTP `/api/tools` share the same `defineTool` Zod shapes. A
 | `batch_execute` | run several tool calls in one request (optional waypoint / stopOnError) |
 | `execute_luau` | run arbitrary Luau at plugin security level |
 
-`manage_studio.run_test` injects Luau, **stops leftover Play first**, starts Play (or Run), collects `[ROBRIDGE_TEST]` logs, stops, and writes a report. Prefer it over manually sequencing `play_start` + `manage_logs` + `play_stop`. Args: `script`, `test_name`, `timeout`, `mode` (`play` \| `run`), `record`, `recordSeconds`, `recordPath`.
+`manage_studio.run_test` injects Luau, **stops leftover Play first**, starts Play (or Run), collects `[ROBRIDGE_TEST]` logs, stops, and writes a report. Prefer it over `play_start` + `manage_logs` + `play_stop`.
 
 `system_info.preflight` is a read-only Studio checklist (edit mode, HttpService, loadstring, Mesh/Image APIs) with fix instructions.
 
@@ -105,6 +107,8 @@ Instance paths look like `game.Workspace.Model.Part` or `Workspace/Model/Part`. 
 
 The plugin reads `RoBridgeHost`/`RoBridgePort` plugin settings if you need a non-default port.
 
+Dump the shipped catalog (no Studio needed): `node dist/index.js --dump-catalog`. Live HTTP: [http://127.0.0.1:3737/api/tools](http://127.0.0.1:3737/api/tools). Schema check: `npm run test:schema`.
+
 ## Troubleshooting
 
 | Problem | What to do |
@@ -116,14 +120,16 @@ The plugin reads `RoBridgeHost`/`RoBridgePort` plugin settings if you need a non
 | Play started but agent never polls | Game Settings → Security → Allow HTTP Requests. |
 | Stale dashboard / port in use | One process owns `:3737`. Stop the owner MCP/Node process and start once. |
 
-Tool errors append a `Fix:` line when the server recognizes the failure. Run `system_info` `preflight` for a checklist.
+Tool errors append a `Fix:` line when the server recognizes the failure. Run `system_info` `preflight` for a checklist. More: [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Limits
 
-- One RoBridge instance owns `:3737`; extra MCP clients **forward** to that owner (they do not bind a second dashboard).
-- `manage_assets` insert uses `InsertService:LoadAsset`, which requires the asset to be free or owned by you.
-- Open Cloud asset upload is not included. `upload_asset` is Studio `AssetService:CreateAssetAsync` (`confirm=true`), not an Open Cloud API-key flow.
+- One RoBridge instance owns `:3737`; extra MCP clients **forward** to that owner.
+- `manage_assets` insert uses `InsertService:LoadAsset` (asset must be free or owned by you).
+- Open Cloud asset upload is not included. `upload_asset` is Studio `AssetService:CreateAssetAsync` (`confirm=true`).
 - Not a crate game. The product is the local MCP bridge.
+
+See [docs/limits.md](docs/limits.md).
 
 ## License
 

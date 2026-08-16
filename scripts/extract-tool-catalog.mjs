@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Parse defineTool registrations in src/tools/*.ts into JSON for the docs site.
+// Parse defineTool registrations in src/tools/*.ts into JSON + markdown for GitHub docs.
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TOOLS_DIR = path.join(ROOT, "src", "tools");
-const OUT_DIR = path.join(ROOT, "web", "lib");
+const OUT_DIR = path.join(ROOT, "docs");
 
 const FILE_GROUPS = {
   "core.ts": { group: "Instances", order: 1 },
@@ -203,8 +203,81 @@ const catalog = {
   tools,
 };
 
+function mdEscape(s) {
+  return String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+}
+
+function toMarkdown(cat) {
+  const lines = [
+    "# Tools",
+    "",
+    `${cat.toolCount} tools from \`defineTool\` in \`src/tools\`. Server **${cat.serverVersion}**, plugin **${cat.pluginVersion}**. Same shapes as MCP \`tools/list\` and \`GET /api/tools\`. All free.`,
+    "",
+    "Regenerate this page: `node scripts/extract-tool-catalog.mjs`.",
+    "",
+    "## Index",
+    "",
+  ];
+  const groups = new Map();
+  for (const tool of cat.tools) {
+    const list = groups.get(tool.group) ?? [];
+    list.push(tool);
+    groups.set(tool.group, list);
+  }
+  for (const [group, list] of groups) {
+    lines.push(`### ${group}`, "");
+    for (const tool of list) {
+      lines.push(`- [\`${tool.name}\`](#${tool.name})`);
+    }
+    lines.push("");
+  }
+  for (const [group, list] of groups) {
+    lines.push(`## ${group}`, "");
+    for (const tool of list) {
+      lines.push(`### \`${tool.name}\``, "");
+      lines.push(`\`${tool.file}\``, "");
+      lines.push(tool.description, "");
+      if (tool.actions.length) {
+        lines.push(tool.actions.map((a) => `\`${a}\``).join(" · "), "");
+      }
+      if (tool.params.length) {
+        lines.push("| Param | Type | | Notes |", "| --- | --- | --- | --- |");
+        for (const p of tool.params) {
+          const type =
+            p.type === "enum" && p.enum && p.name !== "action"
+              ? `enum (${p.enum.join(" \\| ")})`
+              : p.type;
+          const notes = p.description ?? (p.name === "action" ? "Action enum" : "—");
+          lines.push(
+            `| \`${p.name}\` | \`${type}\` | ${p.optional ? "optional" : "required"} | ${mdEscape(notes)} |`
+          );
+        }
+        lines.push("");
+      }
+    }
+  }
+  lines.push(
+    "## Value conventions",
+    "",
+    "| Roblox type | JSON |",
+    "| --- | --- |",
+    "| Vector3 / CFrame position | `[x, y, z]` |",
+    "| CFrame (full) | 12 numbers |",
+    "| Color3 | `\"#ff0000\"` or `[r, g, b]` in 0–1 |",
+    "| UDim2 | `[xs, xo, ys, yo]` |",
+    "| Enum | `\"Enum.Material.Neon\"` or `\"Neon\"` |",
+    "| Instance | path string |",
+    "",
+    "Paths: `game.Workspace.Model.Part` or `Workspace/Model/Part`. Prefer `rbId` from a prior summary when names collide. Never invent `rbxassetid` values — `manage_assets.search` first.",
+    ""
+  );
+  return lines.join("\n");
+}
+
 await mkdir(OUT_DIR, { recursive: true });
 const outFile = path.join(OUT_DIR, "catalog.generated.json");
 await writeFile(outFile, JSON.stringify(catalog, null, 2) + "\n", "utf8");
-console.log(`Wrote ${tools.length} tools → ${path.relative(ROOT, outFile)}`);
+const mdFile = path.join(OUT_DIR, "tools.md");
+await writeFile(mdFile, toMarkdown(catalog), "utf8");
+console.log(`Wrote ${tools.length} tools → ${path.relative(ROOT, outFile)} and ${path.relative(ROOT, mdFile)}`);
 console.log(`Versions: package ${serverVersion}, server ${indexVersion}, plugin ${pluginVersion}`);

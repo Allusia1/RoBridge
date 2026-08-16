@@ -263,12 +263,12 @@ for (const name of mcpByName.keys()) {
   if (!dumpTools.has(name)) fail(`MCP tools/list has extra tool ${name} not in dump-catalog`);
 }
 
-const generatedPath = path.join(ROOT, "web", "lib", "catalog.generated.json");
+const generatedPath = path.join(ROOT, "docs", "catalog.generated.json");
 try {
   const generated = JSON.parse(await readFile(generatedPath, "utf8"));
   const genTools = new Map((generated.tools || []).map((t) => [t.name, t]));
   if (genTools.size !== dumpTools.size) {
-    fail(`web/lib/catalog.generated.json has ${genTools.size} tools, dump-catalog has ${dumpTools.size}. Run: node scripts/extract-tool-catalog.mjs`);
+    fail(`docs/catalog.generated.json has ${genTools.size} tools, dump-catalog has ${dumpTools.size}. Run: node scripts/extract-tool-catalog.mjs`);
   }
   for (const [name, catalog] of dumpTools) {
     const gen = genTools.get(name);
@@ -284,7 +284,7 @@ try {
   ok(`docs catalog.generated.json matches dump-catalog (${genTools.size} tools)`);
 } catch (err) {
   if (err && err.code === "ENOENT") {
-    console.log("NOTE  web/lib/catalog.generated.json not present — skipped docs catalog check");
+    console.log("NOTE  docs/catalog.generated.json not present — skipped docs catalog check");
   } else {
     fail(`docs catalog check: ${err instanceof Error ? err.message : err}`);
   }

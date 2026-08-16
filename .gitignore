@@ -3,9 +3,6 @@ dist/
 sync/
 test-reports/
 gallery/
-web/node_modules/
-web/.next/
-web/out/
 .tmp-crate-mvp/
 asset-library/
 .DS_Store
