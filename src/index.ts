@@ -11,20 +11,28 @@ import { registerMediaTools } from "./tools/media.js";
 import { registerUiTools } from "./tools/ui.js";
 import { registerStudioTools } from "./tools/studio.js";
 import { registerExecuteTools } from "./tools/execute.js";
+import { dispatchCli, isCliCommand } from "./cli.js";
 
 const VERSION = "0.1.6";
 const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
-const NO_MCP = process.argv.includes("--no-mcp"); // HTTP dashboard/bridge only — never put this in an MCP client spawn
-const DUMP_CATALOG = process.argv.includes("--dump-catalog"); // CLI JSON dump — never put this in an MCP client spawn
-
-// MCP stdio clients (Claude Desktop, Claude Code, Cursor, …) require stdout = JSON-RPC only.
-// Any console.log banner or catalog dump on the MCP path breaks the handshake.
-const log = (...args: unknown[]) => console.error("[RoBridge]", ...args);
-console.log = log;
-console.info = log;
-console.debug = log;
+const ARGV = process.argv.slice(2);
 
 async function main() {
+  // Subcommands print to stdout and exit. Empty / unknown argv starts MCP (client spawn).
+  if (isCliCommand(ARGV)) {
+    process.exit(await dispatchCli(ARGV));
+  }
+
+  const NO_MCP = ARGV.includes("--no-mcp"); // HTTP dashboard/bridge only — never put this in an MCP client spawn
+  const DUMP_CATALOG = ARGV.includes("--dump-catalog"); // CLI JSON dump — never put this in an MCP client spawn
+
+  // MCP stdio clients (Claude Desktop, Claude Code, Cursor, …) require stdout = JSON-RPC only.
+  // Any console.log banner or catalog dump on the MCP path breaks the handshake.
+  const log = (...args: unknown[]) => console.error("[RoBridge]", ...args);
+  console.log = log;
+  console.info = log;
+  console.debug = log;
+
   const bridge = new Bridge();
   const history = new History();
   const server = new McpServer({ name: "RoBridge", version: VERSION });

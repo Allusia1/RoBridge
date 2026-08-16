@@ -31,23 +31,36 @@ Everything lives in this repo (no separate docs site):
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
 | [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.8 |
 
-Clone this repo and run it locally. It is **not** published to the public npm registry.
+Clone this repo and run it locally. It is **not** published to the public npm registry yet, so `npx robridge@latest` will not work until that changes.
 
 ## Works with
 
-Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). Same spawn: `node` + absolute path to `dist/index.js`. Config files and reload notes: [docs/mcp.md](docs/mcp.md).
+Cursor, Claude Desktop, Claude Code, and any stdio MCP client (VS Code Copilot, Cline, Windsurf). Same spawn: `node` + absolute path to `dist/index.js` (empty argv — no subcommands). Config files and reload notes: [docs/mcp.md](docs/mcp.md).
 
 ## First run
 
 ```bash
-npm install
-npm run build
-npm run install-plugin
+npm install && npm run build && npx robridge init
 ```
 
-Then restart Roblox Studio, **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**.
+That copies the Studio plugin into the Roblox Plugins folder and prints MCP spawn snippets. Plugin only: `npx robridge install-plugin`. Snippets only (does not start the server): `npx robridge mcp`.
 
-Register the MCP server in `~/.cursor/mcp.json` with an **absolute path**:
+Then restart Roblox Studio (or refresh Plugins), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**.
+
+Plugin destination:
+
+| OS | Path |
+| --- | --- |
+| macOS | `~/Documents/Roblox/Plugins/RoBridge.lua` |
+| Windows | `%LOCALAPPDATA%\Roblox\Plugins\RoBridge.lua` |
+
+Claude Code:
+
+```bash
+claude mcp add --scope user RoBridge -- node /absolute/path/to/RoBridge/dist/index.js
+```
+
+Cursor / Claude Desktop — `~/.cursor/mcp.json` (absolute path):
 
 ```json
 {
@@ -60,7 +73,9 @@ Register the MCP server in `~/.cursor/mcp.json` with an **absolute path**:
 }
 ```
 
-Other clients (Claude Desktop, Claude Code, VS Code Copilot): [MCP setup](docs/mcp.md). Reload the MCP server after each rebuild. Claude Desktop: fully quit and reopen.
+`npx robridge mcp` prints these blocks with your real path. Other clients: [MCP setup](docs/mcp.md). Reload the MCP server after each rebuild. Claude Desktop: fully quit and reopen.
+
+If this package is published later: `npx robridge@latest init`.
 
 Dashboard: [http://127.0.0.1:3737](http://127.0.0.1:3737). Dashboard only: `node dist/index.js --no-mcp`.
 

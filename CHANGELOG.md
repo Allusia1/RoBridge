@@ -2,6 +2,12 @@
 
 Versions follow the MCP server in `package.json` / `src/index.ts`. The Studio plugin version lives in `plugin/RoBridge.lua` (`VERSION`) and can move independently.
 
+## [Unreleased]
+
+### Added
+
+- CLI one-liners: `npx robridge init` (plugin + MCP snippets), `install-plugin`, `mcp` (print configs only). Empty `node dist/index.js` still starts the stdio MCP server.
+
 ## [0.1.6] — 2026-08-16
 
 First GitHub release. Server **0.1.6**, plugin **0.1.8**.

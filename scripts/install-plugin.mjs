@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copies the RoBridge Studio plugin into the local Roblox plugins folder.
+// No-build fallback. Preferred: `npx robridge install-plugin` (after npm run build).
 import { copyFile, mkdir, access } from "node:fs/promises";
 import { homedir, platform } from "node:os";
 import path from "node:path";

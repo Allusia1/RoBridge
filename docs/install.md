@@ -2,7 +2,38 @@
 
 RoBridge is a local checkout: build the Node server, copy the plugin into Studio’s plugins folder, then point your MCP client at `dist/index.js`.
 
-Server **0.1.6**, plugin **0.1.8**.
+Server **0.1.6**, plugin **0.1.8**. This repo is **private** and `private: true` — it is not on the public npm registry yet.
+
+## One-liners
+
+After clone:
+
+```bash
+npm install && npm run build && npx robridge init
+```
+
+That copies `plugin/RoBridge.lua` into Studio’s Plugins folder and prints MCP spawn snippets (Cursor JSON, Claude Desktop JSON, Claude Code).
+
+| Command | What it does |
+| --- | --- |
+| `npx robridge init` (or `install`) | Install plugin + print MCP configs |
+| `npx robridge install-plugin` | Plugin only |
+| `npx robridge mcp` | Print MCP configs only — does **not** start the server |
+| `node dist/index.js` (no args) | MCP stdio server (what Cursor / Claude spawn) |
+
+If this package is published later:
+
+```bash
+npx robridge@latest init
+```
+
+Claude Code:
+
+```bash
+claude mcp add --scope user RoBridge -- node /absolute/path/to/RoBridge/dist/index.js
+```
+
+Plugin destination: macOS `~/Documents/Roblox/Plugins/RoBridge.lua`; Windows `%LOCALAPPDATA%\Roblox\Plugins\RoBridge.lua`. Then restart Studio (or refresh Plugins).
 
 ## Steps
 
@@ -16,10 +47,10 @@ Server **0.1.6**, plugin **0.1.8**.
 2. **Install the Studio plugin**
 
    ```bash
-   npm run install-plugin
+   npx robridge install-plugin
    ```
 
-   Copies `plugin/RoBridge.lua` into the local Roblox plugins folder (macOS: `~/Documents/Roblox/Plugins`; Windows: `%LOCALAPPDATA%\Roblox\Plugins`).
+   Same as `npm run install-plugin`. Copies `plugin/RoBridge.lua` into the local Roblox plugins folder (macOS: `~/Documents/Roblox/Plugins`; Windows: `%LOCALAPPDATA%\Roblox\Plugins`).
 
 3. **Restart Roblox Studio** (or refresh the Plugins folder). A **RoBridge** toolbar button appears under Plugins and auto-connects.
 
@@ -29,7 +60,7 @@ Server **0.1.6**, plugin **0.1.8**.
 
 6. **Allow HTTP Requests** in Game Settings → Security if you will playtest. Play-mode agents poll the same local server; `play_start` also tries to set `HttpService.HttpEnabled`.
 
-7. **Register MCP** — see [MCP setup](mcp.md) for Cursor, Claude Desktop, Claude Code, and generic stdio clients. Use an absolute path to `dist/index.js` (this repo is not on npm). Reload the server after each rebuild.
+7. **Register MCP** — `npx robridge mcp` prints Cursor / Claude Desktop JSON and the Claude Code one-liner. Full client notes: [MCP setup](mcp.md). Use an absolute path to `dist/index.js` (this repo is not on npm yet). Reload the server after each rebuild.
 
 8. **Open the dashboard** at [http://127.0.0.1:3737](http://127.0.0.1:3737). Studio connected + place name means you are done.
 

@@ -6,7 +6,7 @@ Tool errors append a `Fix:` line when RoBridge recognizes the failure. `system_i
 
 Symptom: `No Roblox Studio session connected` or `Studio plugin not connected`.
 
-1. Open the place in Roblox Studio with the RoBridge plugin installed (`npm run install-plugin`).
+1. Open the place in Roblox Studio with the RoBridge plugin installed (`npx robridge install-plugin`).
 2. Click **Allow** if Studio asks to talk to `127.0.0.1`.
 3. Confirm the dashboard at :3737 shows the place name.
 4. Fully quit Studio and relaunch if the toolbar button is missing.

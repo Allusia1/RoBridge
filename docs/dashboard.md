@@ -18,7 +18,7 @@ After install, confirm in this order:
 2. Roblox Studio is open on the place you care about; plugin toolbar button exists.
 3. Dashboard Overview shows the place name, not “No Studio connected”.
 
-Plugin not listed? Restart Studio after `npm run install-plugin`. HTTP prompt denied? Allow requests to `127.0.0.1`.
+Plugin not listed? Restart Studio after `npx robridge install-plugin`. HTTP prompt denied? Allow requests to `127.0.0.1`.
 
 ## Port already in use
 

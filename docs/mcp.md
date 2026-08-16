@@ -1,20 +1,26 @@
 # MCP setup
 
-RoBridge is a **local stdio** MCP server. The client spawns `node dist/index.js` (Node **18+**). That process serves the dashboard at `http://127.0.0.1:3737` and talks to the Studio plugin.
+RoBridge is a **local stdio** MCP server. The client spawns `node dist/index.js` with **empty argv** (Node **18+**). That process serves the dashboard at `http://127.0.0.1:3737` and talks to the Studio plugin.
 
-This repo is **not** on the public npm registry. Do not use `npx robridge`. After `npm run build`, point every client at the **absolute path** to `dist/index.js`. `package.json` `bin.robridge` is that same file if you `npm link` locally.
+This repo is **private** and **not** on the public npm registry. `npx robridge@latest` will not work until it is published. After clone: `npm install && npm run build && npx robridge init`. That uses the local `bin.robridge` (`dist/index.js`). Point every client at the **absolute path** to `dist/index.js`.
 
-Never add `--dump-catalog` or `--no-mcp` to a client spawn. Those flags are CLI-only: catalog dump writes JSON to stdout (which would break JSON-RPC), and `--no-mcp` skips stdio entirely.
+Empty argv (or any unknown argument) starts MCP, so Cursor / Claude can spawn `node …/dist/index.js` unchanged. Known commands (`install-plugin`, `init` / `install`, `mcp`, `--help`) print and exit instead of starting the server.
+
+Never add `install-plugin`, `init`, `mcp`, `--help`, `--dump-catalog`, or `--no-mcp` to a client spawn. Catalog dump writes JSON to stdout (which would break JSON-RPC); `--no-mcp` skips stdio entirely.
+
+Print ready-to-paste configs (does not start the server):
+
+```bash
+npx robridge mcp
+```
 
 ## First run (before any client)
 
 ```bash
-npm install
-npm run build
-npm run install-plugin
+npm install && npm run build && npx robridge init
 ```
 
-Restart Roblox Studio, **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**. Then register the server in your client and reload it.
+Restart Roblox Studio (or refresh Plugins), **Allow HTTP** to `127.0.0.1`, and (for screenshots) **Allow Mesh / Image APIs**. Then register the server in your client and reload it.
 
 ## Spawn shape (all stdio clients)
 
@@ -78,6 +84,8 @@ Official CLI (stdio is the default transport). User scope = every project; omit 
 ```bash
 claude mcp add --scope user RoBridge -- node /absolute/path/to/RoBridge/dist/index.js
 ```
+
+`npx robridge mcp` prints this command with your checkout’s absolute path.
 
 Optional port:
 
