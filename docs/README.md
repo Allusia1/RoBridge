@@ -12,4 +12,4 @@ GitHub-native docs for RoBridge. There is no separate docs website.
 | [Troubleshooting](troubleshooting.md) | Fix lines, stuck Play, CaptureService |
 | [Limits](limits.md) | One port, InsertService, no Open Cloud |
 
-Start at the [root README](../README.md). Versions: [changelog](../CHANGELOG.md) (server 0.1.6, plugin 0.1.9).
+Start at the [root README](../README.md). Versions: [changelog](../CHANGELOG.md) (server 0.1.7, plugin 0.1.9).

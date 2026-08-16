@@ -1,6 +1,6 @@
 # Tools
 
-24 tools from `defineTool` in `src/tools`. Server **0.1.6**, plugin **0.1.9**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
+24 tools from `defineTool` in `src/tools`. Server **0.1.7**, plugin **0.1.9**. Same shapes as MCP `tools/list` and `GET /api/tools`. All free.
 
 Regenerate this page: `node scripts/extract-tool-catalog.mjs`.
 
@@ -573,9 +573,9 @@ Animate properties with TweenService (plays live in the Studio viewport). Action
 
 `ui.ts`
 
-Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, get_abs, check, delete.
+Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, scroll (ScrollingFrame CanvasPosition — PlayerGui during playtest, StarterGui in Edit), get_abs, check, delete.
 
-`design_brief` · `create_tree` · `update` · `list` · `inspect` · `list_interactive` · `preview` · `hide_preview` · `click` · `type_text` · `get_abs` · `check` · `delete`
+`design_brief` · `create_tree` · `update` · `list` · `inspect` · `list_interactive` · `preview` · `hide_preview` · `click` · `type_text` · `scroll` · `get_abs` · `check` · `delete`
 
 | Param | Type | | Notes |
 | --- | --- | --- | --- |
@@ -589,6 +589,8 @@ Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (pl
 | `brief` | `string` | optional | Natural-language UI brief for design_brief |
 | `kind` | `enum (hud \| menu \| shop \| inventory \| dialog \| settings \| custom)` | optional | — |
 | `text` | `string` | optional | Text for type_text |
+| `canvasPosition` | `number[]` | optional | Absolute ScrollingFrame CanvasPosition [x, y] for scroll |
+| `delta` | `number[]` | optional | Pixels to add to CanvasPosition; number is Y (positive = down), or [x, y] |
 | `create` | `boolean` | optional | If true, design_brief also creates the tree |
 
 ## Execute

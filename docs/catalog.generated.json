@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-16T17:39:53.239Z",
-  "serverVersion": "0.1.6",
-  "packageVersion": "0.1.6",
+  "generatedAt": "2026-08-16T21:37:28.125Z",
+  "serverVersion": "0.1.7",
+  "packageVersion": "0.1.7",
   "pluginVersion": "0.1.9",
   "toolCount": 24,
   "tools": [
@@ -2398,7 +2398,7 @@
     },
     {
       "name": "manage_ui",
-      "description": "Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, get_abs, check, delete.",
+      "description": "Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, scroll (ScrollingFrame CanvasPosition — PlayerGui during playtest, StarterGui in Edit), get_abs, check, delete.",
       "file": "ui.ts",
       "group": "UI",
       "groupOrder": 5,
@@ -2413,6 +2413,7 @@
         "hide_preview",
         "click",
         "type_text",
+        "scroll",
         "get_abs",
         "check",
         "delete"
@@ -2433,6 +2434,7 @@
             "hide_preview",
             "click",
             "type_text",
+            "scroll",
             "get_abs",
             "check",
             "delete"
@@ -2493,6 +2495,18 @@
           "type": "string",
           "optional": true,
           "description": "Text for type_text"
+        },
+        {
+          "name": "canvasPosition",
+          "type": "number[]",
+          "optional": true,
+          "description": "Absolute ScrollingFrame CanvasPosition [x, y] for scroll"
+        },
+        {
+          "name": "delta",
+          "type": "number[]",
+          "optional": true,
+          "description": "Pixels to add to CanvasPosition; number is Y (positive = down), or [x, y]"
         },
         {
           "name": "create",

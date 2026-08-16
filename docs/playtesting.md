@@ -47,7 +47,7 @@ Play agents need HTTP: Game Settings → Security → Allow HTTP Requests. If Pl
 
 ## Input during Play
 
-`manage_input`: `walk_to`, `click_world`, `walk_and_click` (3D objects), `click_path` (PlayerGui buttons), `key`, `type_text`. Screen buttons can also use `manage_ui.click`. Clicks use `UserInputService:CreateVirtualInput`.
+`manage_input`: `walk_to`, `click_world`, `walk_and_click` (3D objects), `click_path` (PlayerGui buttons), `key`, `type_text`. Screen buttons can also use `manage_ui.click`. Scroll ScrollingFrames with `manage_ui.scroll` (`canvasPosition` and/or `delta` — sets CanvasPosition on PlayerGui during Play). Clicks use `UserInputService:CreateVirtualInput`.
 
 ## execute_luau vs Play
 

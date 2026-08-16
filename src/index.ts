@@ -13,7 +13,7 @@ import { registerStudioTools } from "./tools/studio.js";
 import { registerExecuteTools } from "./tools/execute.js";
 import { dispatchCli, isCliCommand } from "./cli.js";
 
-const VERSION = "0.1.6";
+const VERSION = "0.1.7";
 const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
 const ARGV = process.argv.slice(2);
 

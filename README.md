@@ -1,10 +1,10 @@
 # RoBridge
 
-[![version](https://img.shields.io/badge/server-0.1.6-c17a4a)](docs/README.md)
+[![version](https://img.shields.io/badge/server-0.1.7-c17a4a)](docs/README.md)
 [![plugin](https://img.shields.io/badge/plugin-0.1.9-7d9b72)](plugin/RoBridge.lua)
 [![tools](https://img.shields.io/badge/tools-24%20free-181714)](docs/tools.md)
 [![license](https://img.shields.io/badge/license-MIT-6f6a60)](LICENSE)
-[![changelog](https://img.shields.io/badge/changelog-0.1.6-6f6a60)](CHANGELOG.md)
+[![changelog](https://img.shields.io/badge/changelog-0.1.7-6f6a60)](CHANGELOG.md)
 
 A free, open, **local** MCP server that lets AI agents (Cursor, Claude, any MCP client) drive **Roblox Studio** — DataModel, scripts, terrain, lighting, UI, and playtests — plus a dashboard at [http://127.0.0.1:3737](http://127.0.0.1:3737). All tools included. No Pro tier.
 
@@ -31,7 +31,7 @@ Everything lives in this repo (no separate docs site):
 | [Tools](docs/tools.md) | Full action + param reference |
 | [Troubleshooting](docs/troubleshooting.md) | Fix lines, stuck Play |
 | [Limits](docs/limits.md) | One port, InsertService, no Open Cloud |
-| [Changelog](CHANGELOG.md) | Server 0.1.6 / plugin 0.1.9 |
+| [Changelog](CHANGELOG.md) | Server 0.1.7 / plugin 0.1.9 |
 
 Clone this repo, then `npm install` (see **First run**).
 
@@ -72,7 +72,7 @@ MCP `tools/list` and HTTP `/api/tools` share the same `defineTool` Zod shapes. F
 | `mutate_instances` | create, create_with_props, delete, clone, move, rename, pivot, create_tree, mass_create, mass_delete, mass_duplicate, smart_duplicate, scatter |
 | `manage_properties` | get, get_all, set, set_many / set_multiple, attributes/tags (incl. get_tagged, check_tag), set_relative, set_calculated, mass_set, mass_get, modify_children |
 | `manage_scripts` | get_source, set_source, create, delete, list, search, replace, edit_lines, edit_replace, edit_insert, edit_delete, validate, get_dependencies |
-| `manage_ui` | design_brief, create_tree, update, list, inspect, list_interactive, preview, hide_preview, click, type_text, get_abs, check, delete |
+| `manage_ui` | design_brief, create_tree, update, list, inspect, list_interactive, preview, hide_preview, click, type_text, scroll, get_abs, check, delete |
 | `manage_lighting` | get, set / lighting, set_time / time, atmosphere, sky, terrain_props, mood, add_effect, clear_effects |
 | `manage_selection` | get, set, add, remove, clear, details, cached, context, watch |
 | `manage_camera` | get / info, set, focus / focus_path, focus_position, suggest, zoom_extents, screenshot, record, record_stop |
@@ -138,7 +138,7 @@ See [docs/limits.md](docs/limits.md).
 
 | Path | |
 | --- | --- |
-| `src/` | MCP + HTTP server (`VERSION` 0.1.6) |
+| `src/` | MCP + HTTP server (`VERSION` 0.1.7) |
 | `plugin/` | Studio plugin (`VERSION` 0.1.9) |
 | `ui/` | Dashboard served at [http://127.0.0.1:3737](http://127.0.0.1:3737) |
 | `docs/` | Install, MCP, playtesting, tools, limits |

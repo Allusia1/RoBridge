@@ -4,18 +4,33 @@ Versions follow the MCP server in `package.json` / `src/index.ts`. The Studio pl
 
 ## [Unreleased]
 
-### Fixed
+## [0.1.7] — 2026-08-16
 
-- Studio plugin **0.1.9** no longer warns `Lost connection` on expected long-poll idle timeouts (HttpService was racing the 20s park). Idle polls stay quiet; only real HTTP errors log a drop.
-- Dashboard topology marks Cursor **Active** when a forwarded stdio MCP heartbeats to the `:3737` owner or when proxied tool calls are recent — not only when this Node process is the stdio MCP. Idle copy distinguishes **Cursor config missing** vs **No MCP client calling tools**.
+Server **0.1.7**, plugin **0.1.9**. MCP schema change: `manage_ui` gained action `scroll`. Reload/reconnect the RoBridge MCP server in Cursor (and other clients) so `tools/list` picks up the new enum.
 
 ### Added
 
+- `manage_ui.scroll` — set a ScrollingFrame `CanvasPosition` by path (the path may be the frame or a descendant). Args: `path`, optional `canvasPosition` `[x, y]`, optional `delta` (number = Y down, or `[x, y]`). Hits live PlayerGui during Play; StarterGui in Edit. Playtested PASS.
 - Dummy-proof `npx robridge init` / `install`: Node 18+ check, build if `dist/index.js` is missing, copy the Studio plugin, and **write** Cursor + Claude MCP configs (merge, never wipe other servers). Uses `process.execPath` so GUI apps can spawn Node.
 - `npx robridge mcp` writes the same configs (no plugin). `install-plugin` remains plugin-only. Empty argv still starts the stdio MCP server.
 - `npm install` postinstall builds the server and runs `init`. Skips when `CI` or `GITHUB_ACTIONS` is set (so CI does not write `~/.cursor/mcp.json`). Re-run with `npx robridge init`.
 - `npx robridge doctor` (also `node dist/index.js doctor`) prints an OK/FAIL/SKIP checklist (Node, dist, plugin, MCP configs, :3737, Studio) and exactly one **Next:** action. Does not start the server.
 - Docs + doctor note for Roblox’s **built-in** Studio MCP (`Roblox_Studio` / `StudioMCP`): optional complement, no `:3737` clash; warn if Quick connect overwrote the RoBridge spawn.
+
+### Fixed
+
+- Studio plugin **0.1.9** no longer warns `Lost connection` on expected long-poll idle timeouts (HttpService was racing the 20s park). Idle polls stay quiet; only real HTTP errors log a drop.
+- Dashboard topology marks Cursor **Active** when a forwarded stdio MCP heartbeats to the `:3737` owner or when proxied tool calls are recent — not only when this Node process is the stdio MCP. Idle copy distinguishes **Cursor config missing** vs **No MCP client calling tools**.
+- Dashboard Studio sessions collapse to one row per `placeId`, so Play reconnects do not spawn ghost list entries.
+
+### Changed
+
+- Overview dashboard uses a hub-and-spoke topology; viewport stills vs video are explicit. Install copy assumes a local clone.
+
+### Notes
+
+- Clone, `npm install` (postinstall builds + init). MCP clients spawn `node` with an absolute path to `dist/index.js`.
+- Public MIT: fork and PR; `main` is maintainer-only.
 
 ## [0.1.6] — 2026-08-16
 

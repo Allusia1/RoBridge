@@ -61,6 +61,11 @@ await test("cleanup old test gui", async () => {
   } catch {
     /* ok */
   }
+  try {
+    await call("manage_ui", { action: "delete", path: "game.StarterGui.RoBridgeScrollTest" });
+  } catch {
+    /* ok */
+  }
 });
 
 await test("design_brief + create", async () => {
@@ -116,6 +121,49 @@ await test("type_text Input", async () => {
   return r.text;
 });
 
+await test("scroll ScrollingFrame (edit)", async () => {
+  try {
+    await call("manage_ui", { action: "delete", path: "game.StarterGui.RoBridgeScrollTest" });
+  } catch {
+    /* ok */
+  }
+  await call("manage_ui", {
+    action: "create_tree",
+    screenGuiName: "RoBridgeScrollTest",
+    tree: {
+      className: "ScrollingFrame",
+      name: "Scroller",
+      properties: {
+        Size: [0, 200, 0, 100],
+        Position: [0, 20, 0, 20],
+        CanvasSize: [0, 200, 0, 400],
+        BackgroundColor3: "#1a2233",
+        BorderSizePixel: 0,
+        ScrollBarThickness: 8,
+      },
+      children: [
+        {
+          className: "Frame",
+          name: "Tall",
+          properties: { Size: [1, 0, 0, 400], BackgroundColor3: "#4f8cff", BorderSizePixel: 0 },
+        },
+      ],
+    },
+  });
+  const r = await call("manage_ui", {
+    action: "scroll",
+    path: "game.StarterGui.RoBridgeScrollTest.Scroller",
+    canvasPosition: [0, 80],
+  });
+  if (r.className !== "ScrollingFrame" || r.method !== "CanvasPosition") throw new Error(JSON.stringify(r));
+  const windowY = r.absoluteWindowSize?.[1] ?? 0;
+  const canvasY = r.absoluteCanvasSize?.[1] ?? 0;
+  if (windowY > 0 && canvasY > windowY + 1 && Math.abs((r.canvasPosition?.[1] ?? 0) - 80) > 1) {
+    throw new Error(JSON.stringify(r));
+  }
+  return JSON.stringify(r.canvasPosition);
+});
+
 await test("update title", async () => {
   const r = await call("manage_ui", {
     action: "update",
@@ -169,6 +217,18 @@ await test("type_text play", async () => {
   return JSON.stringify(r);
 });
 
+await test("scroll ScrollingFrame play", async () => {
+  const r = await call("manage_ui", {
+    action: "scroll",
+    path: "RoBridgeScrollTest.Scroller",
+    canvasPosition: [0, 120],
+  });
+  if (!r.canvasPosition || Math.abs(r.canvasPosition[1] - 120) > 2) {
+    throw new Error("CanvasPosition did not move: " + JSON.stringify(r));
+  }
+  return JSON.stringify(r);
+});
+
 await test("manage_logs after play click", async () => {
   const r = await call("manage_logs", { action: "get", limit: 40, containsFilter: "RoBridgeUI" });
   if ((r.items?.length || 0) > 0) return `${r.items.length} matching (${r.source || "edit"})`;
@@ -180,6 +240,10 @@ await test("manage_logs after play click", async () => {
 await test("play_stop", async () => {
   const r = await call("manage_studio", { action: "play_stop" }, 20000);
   return JSON.stringify(r);
+});
+
+await test("cleanup scroll test gui", async () => {
+  await call("manage_ui", { action: "delete", path: "game.StarterGui.RoBridgeScrollTest" });
 });
 
 const passed = results.filter((r) => r.ok).length;

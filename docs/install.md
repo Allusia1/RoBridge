@@ -2,7 +2,7 @@
 
 RoBridge is a local checkout. After clone, **`npm install`** is enough: postinstall builds the server and runs `init` (plugin copy + Cursor/Claude/VS Code Copilot MCP configs).
 
-Server **0.1.6**, plugin **0.1.9**. Requires Node **18+**.
+Server **0.1.7**, plugin **0.1.9**. Requires Node **18+**.
 
 ## One-liners
 

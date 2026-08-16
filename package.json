@@ -1,6 +1,6 @@
 {
   "name": "robridge",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "description": "RoBridge — local MCP server + web dashboard bridging AI agents to Roblox Studio",
   "type": "module",

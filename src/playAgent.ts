@@ -463,6 +463,38 @@ RF.OnClientInvoke = function(action, payload)
 		if vi then pcall(function() vi:SendTextInput(tostring(payload.text or "")) end) end
 		print("[RoBridgeUI] typed into " .. inst.Name)
 		return { path = inst:GetFullName(), text = inst.Text }
+	elseif action == "scroll" then
+		local inst = resolve(payload.path)
+		local sf = inst
+		while sf and not sf:IsA("ScrollingFrame") do
+			sf = sf.Parent
+		end
+		if not sf then error("Not a ScrollingFrame: " .. inst.ClassName) end
+		if payload.canvasPosition == nil and payload.delta == nil then
+			error("scroll requires canvasPosition or delta")
+		end
+		local function vec2(v, fallback)
+			if type(v) == "number" then return Vector2.new(0, v) end
+			if type(v) == "table" then
+				return Vector2.new(v[1] or v.x or v.X or 0, v[2] or v.y or v.Y or 0)
+			end
+			return fallback
+		end
+		local pos = sf.CanvasPosition
+		if payload.canvasPosition ~= nil then pos = vec2(payload.canvasPosition, pos) end
+		if payload.delta ~= nil then pos = pos + vec2(payload.delta, Vector2.new(0, 0)) end
+		sf.CanvasPosition = pos
+		local newPos, canvas, window = sf.CanvasPosition, sf.AbsoluteCanvasSize, sf.AbsoluteWindowSize
+		print("[RoBridgeUI] scrolled " .. sf.Name)
+		return {
+			path = sf:GetFullName(),
+			className = sf.ClassName,
+			canvasPosition = { newPos.X, newPos.Y },
+			absoluteCanvasSize = { canvas.X, canvas.Y },
+			absoluteWindowSize = { window.X, window.Y },
+			method = "CanvasPosition",
+			mode = "play",
+		}
 	elseif action == "list" then
 		local pg = player:WaitForChild("PlayerGui")
 		local out = {}

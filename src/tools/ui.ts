@@ -28,7 +28,7 @@ export function registerUiTools(ctx: ToolContext) {
   defineTool(
     ctx,
     "manage_ui",
-    "Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, get_abs, check, delete.",
+    "Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, scroll (ScrollingFrame CanvasPosition — PlayerGui during playtest, StarterGui in Edit), get_abs, check, delete.",
     {
       action: z.enum([
         "design_brief",
@@ -41,6 +41,7 @@ export function registerUiTools(ctx: ToolContext) {
         "hide_preview",
         "click",
         "type_text",
+        "scroll",
         "get_abs",
         "check",
         "delete",
@@ -54,6 +55,8 @@ export function registerUiTools(ctx: ToolContext) {
       brief: z.string().optional().describe("Natural-language UI brief for design_brief"),
       kind: z.enum(["hud", "menu", "shop", "inventory", "dialog", "settings", "custom"]).optional(),
       text: z.string().optional().describe("Text for type_text"),
+      canvasPosition: z.array(z.number()).optional().describe("Absolute ScrollingFrame CanvasPosition [x, y] for scroll"),
+      delta: z.union([z.number(), z.array(z.number())]).optional().describe("Pixels to add to CanvasPosition; number is Y (positive = down), or [x, y]"),
       create: z.boolean().optional().describe("If true, design_brief also creates the tree"),
     },
     async (args, ctx) => {
@@ -70,10 +73,24 @@ export function registerUiTools(ctx: ToolContext) {
         return plan;
       }
 
-      if (args.action === "click" || args.action === "type_text" || args.action === "list_interactive" || args.action === "inspect") {
+      if (
+        args.action === "click" ||
+        args.action === "type_text" ||
+        args.action === "scroll" ||
+        args.action === "list_interactive" ||
+        args.action === "inspect"
+      ) {
         if (ctx.bridge.isPlayConnected()) {
           const playAction =
-            args.action === "click" ? "click" : args.action === "type_text" ? "type" : args.action === "inspect" ? "inspect" : "list";
+            args.action === "click"
+              ? "click"
+              : args.action === "type_text"
+                ? "type"
+                : args.action === "scroll"
+                  ? "scroll"
+                  : args.action === "inspect"
+                    ? "inspect"
+                    : "list";
           return runLuau(
             ctx,
             "manage_ui",
@@ -82,7 +99,16 @@ if RB.invokeClient then
   return RB.invokeClient(A.playAction, A.payload)
 end
 error("Play agent missing invokeClient")`,
-            { _play: "invokeClient", playAction, payload: { path: args.path, text: args.text } },
+            {
+              _play: "invokeClient",
+              playAction,
+              payload: {
+                path: args.path,
+                text: args.text,
+                canvasPosition: args.canvasPosition,
+                delta: args.delta,
+              },
+            },
             20_000,
             "play"
           );
@@ -233,6 +259,33 @@ elseif A.action == "type_text" then
   if not inst:IsA("TextBox") then error("Not a TextBox") end
   inst.Text = A.text or ""
   return { path = inst:GetFullName(), text = inst.Text, mode = "edit" }
+elseif A.action == "scroll" then
+  local inst = RB.resolve(A.path)
+  local sf = inst
+  while sf and not sf:IsA("ScrollingFrame") do sf = sf.Parent end
+  if not sf then error("Not a ScrollingFrame: " .. inst.ClassName) end
+  if A.canvasPosition == nil and A.delta == nil then error("scroll requires canvasPosition or delta") end
+  local function vec2(v, fallback)
+    if type(v) == "number" then return Vector2.new(0, v) end
+    if type(v) == "table" then
+      return Vector2.new(v[1] or v.x or v.X or 0, v[2] or v.y or v.Y or 0)
+    end
+    return fallback
+  end
+  local pos = sf.CanvasPosition
+  if A.canvasPosition ~= nil then pos = vec2(A.canvasPosition, pos) end
+  if A.delta ~= nil then pos = pos + vec2(A.delta, Vector2.new(0, 0)) end
+  sf.CanvasPosition = pos
+  local newPos, canvas, window = sf.CanvasPosition, sf.AbsoluteCanvasSize, sf.AbsoluteWindowSize
+  return {
+    path = sf:GetFullName(),
+    className = sf.ClassName,
+    canvasPosition = { newPos.X, newPos.Y },
+    absoluteCanvasSize = { canvas.X, canvas.Y },
+    absoluteWindowSize = { window.X, window.Y },
+    method = "CanvasPosition",
+    mode = "edit",
+  }
 elseif A.action == "get_abs" then
   local inst = RB.resolve(A.path)
   if not inst:IsA("GuiObject") then error("Not a GuiObject") end
