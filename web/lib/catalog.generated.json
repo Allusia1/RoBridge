@@ -1,0 +1,2561 @@
+{
+  "generatedAt": "2026-08-16T17:08:15.926Z",
+  "serverVersion": "0.1.6",
+  "packageVersion": "0.1.6",
+  "pluginVersion": "0.1.8",
+  "toolCount": 24,
+  "tools": [
+    {
+      "name": "manage_properties",
+      "description": "Get/set properties, attributes and tags. Actions: get, get_all, set (property + value), set_many/set_multiple (properties map — also used if you pass action 'set' with a properties map and no property), get_attributes/get_attr/get_all_attrs, set_attribute/set_attr, delete_attr, get_tags, add_tag, remove_tag, check_tag, get_tagged, set_relative (add/subtract/multiply/divide via operation, or plain delta), set_calculated (evaluate a math expression with variables that may be values or instance property paths), mass_set, mass_get, modify_children (set props on matching children).",
+      "file": "core.ts",
+      "group": "Instances",
+      "groupOrder": 1,
+      "actions": [
+        "get",
+        "get_all",
+        "set",
+        "set_many",
+        "set_multiple",
+        "get_attributes",
+        "get_attr",
+        "get_all_attrs",
+        "set_attribute",
+        "set_attr",
+        "delete_attr",
+        "get_tags",
+        "add_tag",
+        "remove_tag",
+        "check_tag",
+        "get_tagged",
+        "set_relative",
+        "set_calculated",
+        "mass_set",
+        "mass_get",
+        "modify_children"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "get_all",
+            "set",
+            "set_many",
+            "set_multiple",
+            "get_attributes",
+            "get_attr",
+            "get_all_attrs",
+            "set_attribute",
+            "set_attr",
+            "delete_attr",
+            "get_tags",
+            "add_tag",
+            "remove_tag",
+            "check_tag",
+            "get_tagged",
+            "set_relative",
+            "set_calculated",
+            "mass_set",
+            "mass_get",
+            "modify_children"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Instance path. An RBId GUID is also accepted."
+        },
+        {
+          "name": "rbId",
+          "type": "string",
+          "optional": true,
+          "description": "RoBridge instance id from a prior summary. Preferred over path when both are set. Alias: id"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for rbId"
+        },
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": true,
+          "description": "Paths for mass_set / mass_get"
+        },
+        {
+          "name": "property",
+          "type": "string",
+          "optional": true,
+          "description": "Property name for get/set/set_relative/set_calculated. Alias: propertyName"
+        },
+        {
+          "name": "propertyName",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for property"
+        },
+        {
+          "name": "properties",
+          "type": "string[]",
+          "optional": true,
+          "description": "Property name list (get) or map (set_many)"
+        },
+        {
+          "name": "value",
+          "type": "any",
+          "optional": true,
+          "description": "Value for set / set_attribute / set_relative. Alias: amount"
+        },
+        {
+          "name": "amount",
+          "type": "any",
+          "optional": true,
+          "description": "Alias for value (set_relative)"
+        },
+        {
+          "name": "operation",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide"
+          ],
+          "description": "Math operation for set_relative (default add)"
+        },
+        {
+          "name": "expression",
+          "type": "string",
+          "optional": true,
+          "description": "Math expression for set_calculated, e.g. 'base * multiplier + 2'"
+        },
+        {
+          "name": "variables",
+          "type": "object",
+          "optional": true,
+          "description": "set_calculated variables: name -> number or 'path.to.Instance.Property' string"
+        },
+        {
+          "name": "attribute",
+          "type": "string",
+          "optional": true,
+          "description": "Attribute name"
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "optional": true,
+          "description": "Tag name"
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Optional ClassName filter for modify_children"
+        }
+      ]
+    },
+    {
+      "name": "manage_scripts",
+      "description": "Work with Script/LocalScript/ModuleScript sources. Actions: get_source, set_source, create, delete, list, search, replace (substring across scripts), edit_lines, edit_replace (find/replace in one script), edit_insert (insert at line), edit_delete (delete line range), validate (loadstring syntax check of a script path or raw source), get_dependencies (require() targets and services a script references). Prefer these over execute_luau for script edits.",
+      "file": "core.ts",
+      "group": "Instances",
+      "groupOrder": 1,
+      "actions": [
+        "get_source",
+        "set_source",
+        "create",
+        "delete",
+        "list",
+        "search",
+        "replace",
+        "edit_lines",
+        "edit_replace",
+        "edit_insert",
+        "edit_delete",
+        "validate",
+        "get_dependencies"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get_source",
+            "set_source",
+            "create",
+            "delete",
+            "list",
+            "search",
+            "replace",
+            "edit_lines",
+            "edit_replace",
+            "edit_insert",
+            "edit_delete",
+            "validate",
+            "get_dependencies"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Script path (or root path for list/search, defaults to game). An RBId GUID is also accepted."
+        },
+        {
+          "name": "rbId",
+          "type": "string",
+          "optional": true,
+          "description": "RoBridge instance id from a prior summary. Preferred over path when both are set. Alias: id"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for rbId"
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "optional": true,
+          "description": "New source for set_source/create, or replacement text for edit_lines/edit_insert"
+        },
+        {
+          "name": "className",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "Script",
+            "LocalScript",
+            "ModuleScript"
+          ],
+          "description": "Class for create (default Script)"
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true,
+          "description": "Parent for create"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "description": "Name for create"
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "optional": true,
+          "description": "Substring to search for / find text for replace"
+        },
+        {
+          "name": "replacement",
+          "type": "string",
+          "optional": true,
+          "description": "Replacement text for replace / edit_replace"
+        },
+        {
+          "name": "startLine",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "endLine",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxResults",
+          "type": "number",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "mutate_instances",
+      "description": "Create, delete, clone, move, rename, or pivot instances. Also: create_with_props (create+properties), create_tree (nested hierarchy in one waypoint), mass_create, mass_delete, mass_duplicate, smart_duplicate (N copies with offset), scatter (ray-snap clones onto ground in a region). Property values: numbers/strings/booleans, Vector3 [x,y,z], CFrame [x,y,z] or 12 numbers, Color3 hex '#ff0000' or [r,g,b] 0-1, UDim2 [xs,xo,ys,yo], enum strings like 'Enum.Material.Neon'.",
+      "file": "core.ts",
+      "group": "Instances",
+      "groupOrder": 1,
+      "actions": [
+        "create",
+        "create_with_props",
+        "delete",
+        "clone",
+        "move",
+        "rename",
+        "pivot",
+        "create_tree",
+        "mass_create",
+        "mass_delete",
+        "mass_duplicate",
+        "smart_duplicate",
+        "scatter"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "create",
+            "create_with_props",
+            "delete",
+            "clone",
+            "move",
+            "rename",
+            "pivot",
+            "create_tree",
+            "mass_create",
+            "mass_delete",
+            "mass_duplicate",
+            "smart_duplicate",
+            "scatter"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Target instance path (delete/clone/move/rename/pivot/smart_duplicate). An RBId GUID is also accepted."
+        },
+        {
+          "name": "rbId",
+          "type": "string",
+          "optional": true,
+          "description": "RoBridge instance id from a prior summary. Preferred over path when both are set. Alias: id"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for rbId"
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "ClassName to create"
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true,
+          "description": "Parent path for create/clone/move. Alias: parent"
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for parentPath"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "description": "Name for created/cloned instance"
+        },
+        {
+          "name": "newName",
+          "type": "string",
+          "optional": true,
+          "description": "New name for rename"
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true,
+          "description": "Properties to set"
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] position for move/pivot"
+        },
+        {
+          "name": "cframe",
+          "type": "number[]",
+          "optional": true,
+          "description": "CFrame as [x,y,z] or 12 numbers for pivot"
+        },
+        {
+          "name": "offset",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] relative offset for pivot/smart_duplicate"
+        },
+        {
+          "name": "tree",
+          "type": "object",
+          "optional": true,
+          "description": "Nested instance tree for create_tree"
+        },
+        {
+          "name": "instances",
+          "type": "object",
+          "optional": true,
+          "description": "Specs for mass_create"
+        },
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": true,
+          "description": "Paths for mass_delete / mass_duplicate"
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": true,
+          "description": "Copy count for smart_duplicate / scatter"
+        },
+        {
+          "name": "templatePaths",
+          "type": "string[]",
+          "optional": true,
+          "description": "Templates to clone for scatter"
+        },
+        {
+          "name": "region",
+          "type": "number[]",
+          "optional": true,
+          "description": "World AABB {min,max} for scatter"
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxSlope",
+          "type": "number",
+          "optional": true,
+          "description": "Max ground slope degrees for scatter (default 30)"
+        },
+        {
+          "name": "avoidWater",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "parentName",
+          "type": "string",
+          "optional": true,
+          "description": "Folder name that groups scatter results"
+        }
+      ]
+    },
+    {
+      "name": "query_instances",
+      "description": "Query instances in the Roblox place. Prefer a typed action over execute_luau. Actions: get, children, descendants, ancestors, find_child, find_descendant, wait_for_child, search_class, search_name, search_property, search_tag, class_info, file_tree (nested outline), project_structure (service/script counts). Paths: 'game.Workspace.Model.Part' or 'Workspace/Model/Part'. Prefer rbId (from a prior summary) over path when both are set — names like Part are not unique. Aliases: childName/descendantName/query→name, root→path, propertyName→property, id→rbId.",
+      "file": "core.ts",
+      "group": "Instances",
+      "groupOrder": 1,
+      "actions": [
+        "get",
+        "children",
+        "descendants",
+        "ancestors",
+        "find_child",
+        "find_descendant",
+        "wait_for_child",
+        "search_class",
+        "search_name",
+        "search_property",
+        "search_tag",
+        "class_info",
+        "file_tree",
+        "project_structure"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "children",
+            "descendants",
+            "ancestors",
+            "find_child",
+            "find_descendant",
+            "wait_for_child",
+            "search_class",
+            "search_name",
+            "search_property",
+            "search_tag",
+            "class_info",
+            "file_tree",
+            "project_structure"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Instance path. Defaults to game. Alias: root. An RBId GUID is also accepted."
+        },
+        {
+          "name": "root",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for path"
+        },
+        {
+          "name": "rbId",
+          "type": "string",
+          "optional": true,
+          "description": "RoBridge instance id from a prior summary. Preferred over path when both are set. Alias: id"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for rbId"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "description": "Child/descendant name or name substring for searches"
+        },
+        {
+          "name": "childName",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for name (find_child / wait_for_child)"
+        },
+        {
+          "name": "descendantName",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for name (find_descendant)"
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for name (search_name)"
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "ClassName for search_class / class_info"
+        },
+        {
+          "name": "property",
+          "type": "string",
+          "optional": true,
+          "description": "Property name for search_property"
+        },
+        {
+          "name": "propertyName",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for property"
+        },
+        {
+          "name": "value",
+          "type": "any",
+          "optional": true,
+          "description": "Optional property value to match (search_property)"
+        },
+        {
+          "name": "propertyValue",
+          "type": "any",
+          "optional": true,
+          "description": "Alias for value"
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "optional": true,
+          "description": "Tag for search_tag"
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "optional": true,
+          "description": "Seconds to wait (wait_for_child, default 5, max 30)"
+        },
+        {
+          "name": "maxDepth",
+          "type": "number",
+          "optional": true,
+          "description": "Max depth for file_tree (default 5) / project_structure (default 3)"
+        },
+        {
+          "name": "depth",
+          "type": "number",
+          "optional": true,
+          "description": "Alias for maxDepth"
+        },
+        {
+          "name": "maxResults",
+          "type": "number",
+          "optional": true,
+          "description": "Max results for searches/descendants (default 100)"
+        },
+        {
+          "name": "includeProps",
+          "type": "boolean",
+          "optional": true,
+          "description": "Include common properties in results"
+        }
+      ]
+    },
+    {
+      "name": "manage_camera",
+      "description": "Control the Studio viewport camera. Actions: get/info, set, focus/focus_path, focus_position (look at a world point), suggest (recommended views for a target or the selection — does not move the camera), zoom_extents, screenshot, record, record_stop. screenshot captures the Edit-mode viewport via Roblox CaptureService (works even if Studio is in the background). record captures a short viewport clip (CaptureService frame burst → Node stitch). CaptureService allows only one in-flight shot and typically lands around 1.5–2 fps; that cap is expected. record_stop aborts an in-flight recording. Requires File → Game Settings → Security → Allow Mesh / Image APIs.",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "get",
+        "info",
+        "set",
+        "focus",
+        "focus_path",
+        "focus_position",
+        "suggest",
+        "zoom_extents",
+        "screenshot",
+        "record",
+        "record_stop"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "info",
+            "set",
+            "focus",
+            "focus_path",
+            "focus_position",
+            "suggest",
+            "zoom_extents",
+            "screenshot",
+            "record",
+            "record_stop"
+          ]
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] camera position"
+        },
+        {
+          "name": "lookAt",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] point to look at"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Instance to focus for focus/screenshot/record"
+        },
+        {
+          "name": "distance",
+          "type": "number",
+          "optional": true,
+          "description": "Distance from target when focusing"
+        },
+        {
+          "name": "maxDimension",
+          "type": "number",
+          "optional": true,
+          "description": "Longest screenshot/record side in pixels (screenshot default 1024, record default 480)"
+        },
+        {
+          "name": "seconds",
+          "type": "number",
+          "optional": true,
+          "description": "record duration in seconds (default 4, max 12)"
+        },
+        {
+          "name": "fps",
+          "type": "number",
+          "optional": true,
+          "description": "record target frames per second (default 15, range 4–24). Actual rate is CaptureService-limited (~1.5–2 fps)."
+        }
+      ]
+    },
+    {
+      "name": "manage_effects",
+      "description": "Add visual effects to parts. Actions: create (ParticleEmitter, Fire, Smoke, Sparkles, Trail, Beam, PointLight, SpotLight, SurfaceLight, Highlight), remove/clear, list, emit (ParticleEmitter:Emit), toggle (Enabled).",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "create",
+        "remove",
+        "clear",
+        "list",
+        "emit",
+        "toggle"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "create",
+            "remove",
+            "clear",
+            "list",
+            "emit",
+            "toggle"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false,
+          "description": "Target part/instance path"
+        },
+        {
+          "name": "effectType",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": true,
+          "description": "Particle count for emit (default 16)"
+        }
+      ]
+    },
+    {
+      "name": "manage_lighting",
+      "description": "Inspect or change Lighting and environment. Actions: get, set/lighting (Lighting properties), set_time/time (clockTime 0-24 or time 'HH:MM:SS'), atmosphere (get/set Atmosphere, createIfMissing), sky, terrain_props (Terrain water/visuals), mood (preset: day/night/sunset/foggy/horror plus optional overrides), add_effect, clear_effects. Do not invent skybox asset IDs.",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "get",
+        "set",
+        "lighting",
+        "set_time",
+        "time",
+        "atmosphere",
+        "sky",
+        "terrain_props",
+        "mood",
+        "add_effect",
+        "clear_effects"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "set",
+            "lighting",
+            "set_time",
+            "time",
+            "atmosphere",
+            "sky",
+            "terrain_props",
+            "mood",
+            "add_effect",
+            "clear_effects"
+          ]
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "clockTime",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "time",
+          "type": "string",
+          "optional": true,
+          "description": "HH:MM:SS for time action"
+        },
+        {
+          "name": "effectType",
+          "type": "string",
+          "optional": true,
+          "description": "e.g. Atmosphere, BloomEffect"
+        },
+        {
+          "name": "createIfMissing",
+          "type": "boolean",
+          "optional": true,
+          "description": "Create Atmosphere/Sky if missing (default true)"
+        },
+        {
+          "name": "mood",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "day",
+            "night",
+            "sunset",
+            "foggy",
+            "horror"
+          ]
+        },
+        {
+          "name": "overrides",
+          "type": "object",
+          "optional": true,
+          "description": "Optional Lighting property overrides for mood"
+        }
+      ]
+    },
+    {
+      "name": "manage_physics",
+      "description": "Physics helpers. Actions: anchor / unanchor, set_collide, weld, get_mass, set_physical_properties, create_constraint, register_group, set_collidable, get_groups (PhysicsService collision groups).",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "anchor",
+        "unanchor",
+        "set_collide",
+        "weld",
+        "get_mass",
+        "set_physical_properties",
+        "create_constraint",
+        "register_group",
+        "set_collidable",
+        "get_groups"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "anchor",
+            "unanchor",
+            "set_collide",
+            "weld",
+            "get_mass",
+            "set_physical_properties",
+            "create_constraint",
+            "register_group",
+            "set_collidable",
+            "get_groups"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "otherPath",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "canCollide",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "constraintType",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "density",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "friction",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "elasticity",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "optional": true,
+          "description": "Collision group name"
+        },
+        {
+          "name": "groupA",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "groupB",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "collidable",
+          "type": "boolean",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "manage_terrain",
+      "description": "Edit Terrain. Actions: fill_block, fill_ball, fill_cylinder, fill_wedge, clear, clear_region (center+size or region {min,max}), clear_bounds (min+max), replace_material (fromMaterial→material), colors_get / colors_set (per-material terrain colors), read_voxel (position), read_voxels / write_voxels (bulk region voxels), generate (procedural fBm terrain with presets mountains/hills/plains/dunes/islands/canyon), smooth (blur occupancy in a region), get_info. Regions: {min:[x,y,z], max:[x,y,z]}. Materials: Grass, Sand, Rock, Water, Snow, Mud, Asphalt, Basalt, Brick, Cobblestone, Concrete, CrackedLava, Glacier, Ground, Ice, LeafyGrass, Limestone, Pavement, Salt, Sandstone, Slate, WoodPlanks.",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "fill_block",
+        "fill_ball",
+        "fill_cylinder",
+        "fill_wedge",
+        "clear",
+        "clear_region",
+        "clear_bounds",
+        "replace_material",
+        "colors_get",
+        "colors_set",
+        "read_voxel",
+        "read_voxels",
+        "write_voxels",
+        "generate",
+        "smooth",
+        "get_info"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "fill_block",
+            "fill_ball",
+            "fill_cylinder",
+            "fill_wedge",
+            "clear",
+            "clear_region",
+            "clear_bounds",
+            "replace_material",
+            "colors_get",
+            "colors_set",
+            "read_voxel",
+            "read_voxels",
+            "write_voxels",
+            "generate",
+            "smooth",
+            "get_info"
+          ]
+        },
+        {
+          "name": "center",
+          "type": "number[]",
+          "optional": true
+        },
+        {
+          "name": "size",
+          "type": "number[]",
+          "optional": true
+        },
+        {
+          "name": "region",
+          "type": "number[]",
+          "optional": true,
+          "description": "World AABB for clear_region/replace_material/read_voxels/write_voxels/generate/smooth"
+        },
+        {
+          "name": "min",
+          "type": "number[]",
+          "optional": true,
+          "description": "Min corner for clear_bounds"
+        },
+        {
+          "name": "max",
+          "type": "number[]",
+          "optional": true,
+          "description": "Max corner for clear_bounds"
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "material",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "fromMaterial",
+          "type": "string",
+          "optional": true,
+          "description": "Source material for replace_material. Alias: sourceMaterial"
+        },
+        {
+          "name": "sourceMaterial",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for fromMaterial"
+        },
+        {
+          "name": "targetMaterial",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for material (replace_material)"
+        },
+        {
+          "name": "color",
+          "type": "number[]",
+          "optional": true,
+          "description": "Color for colors_set: [r,g,b] 0-255 or '#hex'"
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] for read_voxel"
+        },
+        {
+          "name": "resolution",
+          "type": "number",
+          "optional": true,
+          "description": "Voxel resolution in studs (always 4 in Roblox; other values are rejected)"
+        },
+        {
+          "name": "materials",
+          "type": "any",
+          "optional": true,
+          "description": "write_voxels: 3D array of material names [x][y][z]"
+        },
+        {
+          "name": "occupancy",
+          "type": "any",
+          "optional": true,
+          "description": "write_voxels: 3D array of occupancy 0-1 [x][y][z]"
+        },
+        {
+          "name": "preset",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "mountains",
+            "hills",
+            "plains",
+            "dunes",
+            "islands",
+            "canyon"
+          ]
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "baseHeight",
+          "type": "number",
+          "optional": true,
+          "description": "generate: base terrain height in studs (default 32)"
+        },
+        {
+          "name": "amplitude",
+          "type": "number",
+          "optional": true,
+          "description": "generate: height variation in studs"
+        },
+        {
+          "name": "frequency",
+          "type": "number",
+          "optional": true,
+          "description": "generate: noise frequency (default 0.01)"
+        },
+        {
+          "name": "octaves",
+          "type": "number",
+          "optional": true,
+          "description": "generate: fBm octaves 1-8 (default 4)"
+        },
+        {
+          "name": "persistence",
+          "type": "number",
+          "optional": true,
+          "description": "generate: amplitude decay per octave (default 0.5)"
+        },
+        {
+          "name": "waterLevel",
+          "type": "number",
+          "optional": true,
+          "description": "generate: absolute water surface height"
+        },
+        {
+          "name": "materialPalette",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "intensity",
+          "type": "number",
+          "optional": true,
+          "description": "smooth: 0-1 blend strength (default 0.5)"
+        }
+      ]
+    },
+    {
+      "name": "spatial_query",
+      "description": "Spatial queries in workspace. Actions: raycast (filterList/filterType/ignoreWater), multi_raycast (rays[], max 50), in_radius, in_box, ground_height/find_ground (position or x/z), check_placement (is a box placeable at position), scan_area (heightmap grid), find_flat (flat build spots), find_spawn (clear spawn positions), analyze_walkable (walkability grid), spatial_map (all BasePart/Model positions), find_space (empty spot for a box), bounds (one path or paths[]), snap_grid (snap an instance pivot to a grid), collision. Areas: searchArea/area/region are {min:[x,y,z], max:[x,y,z]}.",
+      "file": "scene.ts",
+      "group": "World",
+      "groupOrder": 2,
+      "actions": [
+        "raycast",
+        "multi_raycast",
+        "in_radius",
+        "in_box",
+        "ground_height",
+        "find_ground",
+        "check_placement",
+        "scan_area",
+        "find_flat",
+        "find_spawn",
+        "analyze_walkable",
+        "spatial_map",
+        "find_space",
+        "bounds",
+        "snap_grid",
+        "collision"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "raycast",
+            "multi_raycast",
+            "in_radius",
+            "in_box",
+            "ground_height",
+            "find_ground",
+            "check_placement",
+            "scan_area",
+            "find_flat",
+            "find_spawn",
+            "analyze_walkable",
+            "spatial_map",
+            "find_space",
+            "bounds",
+            "snap_grid",
+            "collision"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Instance path for bounds / collision / snap_grid / spatial_map root. Alias: rootPath"
+        },
+        {
+          "name": "rootPath",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for path (spatial_map)"
+        },
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": true,
+          "description": "Multiple paths for bounds"
+        },
+        {
+          "name": "otherPath",
+          "type": "string",
+          "optional": true,
+          "description": "Second instance for collision"
+        },
+        {
+          "name": "origin",
+          "type": "number[]",
+          "optional": true
+        },
+        {
+          "name": "direction",
+          "type": "number[]",
+          "optional": true
+        },
+        {
+          "name": "rays",
+          "type": "number[]",
+          "optional": true,
+          "description": "Ray list for multi_raycast (max 50)"
+        },
+        {
+          "name": "center",
+          "type": "number[]",
+          "optional": true
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] for find_ground / check_placement / collision / find_space result bias"
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "size",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] box size for in_box / check_placement / find_space / scan_area (x,z used)"
+        },
+        {
+          "name": "rotation",
+          "type": "number[]",
+          "optional": true,
+          "description": "[rx,ry,rz] degrees for check_placement"
+        },
+        {
+          "name": "searchArea",
+          "type": "number[]",
+          "optional": true,
+          "description": "World AABB for find_flat / find_spawn / find_space / analyze_walkable. Alias: area"
+        },
+        {
+          "name": "area",
+          "type": "number[]",
+          "optional": true,
+          "description": "Alias for searchArea"
+        },
+        {
+          "name": "filterList",
+          "type": "string[]",
+          "optional": true,
+          "description": "Instance paths to exclude/include in raycasts. Alias: filterInstances"
+        },
+        {
+          "name": "filterInstances",
+          "type": "string[]",
+          "optional": true,
+          "description": "Alias for filterList"
+        },
+        {
+          "name": "filterType",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "Exclude",
+            "Include"
+          ],
+          "description": "Raycast filter type (default Exclude)"
+        },
+        {
+          "name": "ignoreWater",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "checkGround",
+          "type": "boolean",
+          "optional": true,
+          "description": "check_placement: also require ground support (default true)"
+        },
+        {
+          "name": "resolution",
+          "type": "number",
+          "optional": true,
+          "description": "Grid resolution in studs for scan_area/analyze_walkable/find_flat (default 4)"
+        },
+        {
+          "name": "maxDistance",
+          "type": "number",
+          "optional": true,
+          "description": "find_ground max cast distance (default 1000)"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "optional": true,
+          "description": "find_ground vertical offset added to result (default 0)"
+        },
+        {
+          "name": "maxSlope",
+          "type": "number",
+          "optional": true,
+          "description": "Max slope degrees for find_flat (default 10) / analyze_walkable (default 45)"
+        },
+        {
+          "name": "tolerance",
+          "type": "number",
+          "optional": true,
+          "description": "find_flat height variation tolerance in studs (default 2)"
+        },
+        {
+          "name": "minSize",
+          "type": "number[]",
+          "optional": true,
+          "description": "find_flat minimum flat area size [x,z] (default [8,8])"
+        },
+        {
+          "name": "spawnSize",
+          "type": "number[]",
+          "optional": true,
+          "description": "find_spawn entity size (default [4,5,4])"
+        },
+        {
+          "name": "minSpacing",
+          "type": "number",
+          "optional": true,
+          "description": "find_spawn min distance between results (default 10)"
+        },
+        {
+          "name": "preferOutdoor",
+          "type": "boolean",
+          "optional": true,
+          "description": "find_spawn: require open sky (default false)"
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": true,
+          "description": "find_spawn result count (default 10)"
+        },
+        {
+          "name": "characterHeight",
+          "type": "number",
+          "optional": true,
+          "description": "analyze_walkable clearance height (default 5)"
+        },
+        {
+          "name": "maxStepHeight",
+          "type": "number",
+          "optional": true,
+          "description": "analyze_walkable max step between cells (default 2)"
+        },
+        {
+          "name": "includeModels",
+          "type": "boolean",
+          "optional": true,
+          "description": "spatial_map: include Model bounding boxes (default true)"
+        },
+        {
+          "name": "gridSize",
+          "type": "number",
+          "optional": true,
+          "description": "snap_grid / find_space grid size (default 4). Alias: gridSnap"
+        },
+        {
+          "name": "gridSnap",
+          "type": "number",
+          "optional": true,
+          "description": "Alias for gridSize"
+        },
+        {
+          "name": "axes",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ],
+          "description": "snap_grid axes (default all)"
+        },
+        {
+          "name": "padding",
+          "type": "number",
+          "optional": true,
+          "description": "find_space clearance around the box (default 1)"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxResults",
+          "type": "number",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "manage_assets",
+      "description": "Roblox Toolbox/Creator Store assets plus a local asset library. ALWAYS search first, then insert using an assetId from those results — never invent or hardcode IDs. Actions: search (keyword/query + assetType), preview / info (metadata for a search-result assetId), insert / insert_free / insert_package (assetId into parentPath), search_insert (search then insert the first match), export_selection_json (JSON snapshot of the Studio selection), export_selection_rbxm / export_path_rbxm (serialize selection or a path into the local ./asset-library as a re-importable asset), import_rbxm (rebuild a library asset in Studio), review_model (QA a model: anchoring, PrimaryPart, naming, size, expected groups; readiness verdict), generate_model (Roblox GenerationService, if this Studio has access), upload_asset (AssetService:CreateAssetAsync — requires confirm=true), generate_thumbnail (render a library asset to a PNG thumbnail).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "search",
+        "preview",
+        "info",
+        "insert",
+        "insert_free",
+        "insert_package",
+        "search_insert",
+        "export_selection_json",
+        "export_selection_rbxm",
+        "export_path_rbxm",
+        "import_rbxm",
+        "review_model",
+        "generate_model",
+        "upload_asset",
+        "generate_thumbnail"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "search",
+            "preview",
+            "info",
+            "insert",
+            "insert_free",
+            "insert_package",
+            "search_insert",
+            "export_selection_json",
+            "export_selection_rbxm",
+            "export_path_rbxm",
+            "import_rbxm",
+            "review_model",
+            "generate_model",
+            "upload_asset",
+            "generate_thumbnail"
+          ],
+          "description": "search first, then insert/preview with an assetId from results"
+        },
+        {
+          "name": "keyword",
+          "type": "string",
+          "optional": true,
+          "description": "Toolbox search text (required for search). Alias: query"
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for keyword"
+        },
+        {
+          "name": "assetType",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "Model",
+            "Decal",
+            "Audio",
+            "Mesh",
+            "Plugin"
+          ],
+          "description": "Toolbox category. Model=props/crates, Audio=Sounds, Decal=images, Mesh=MeshParts"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "optional": true,
+          "description": "Max search results (default 10, max 30). Alias: maxResults"
+        },
+        {
+          "name": "maxResults",
+          "type": "number",
+          "optional": true,
+          "description": "Alias for limit"
+        },
+        {
+          "name": "assetId",
+          "type": "unknown",
+          "optional": true,
+          "description": "Toolbox asset id from a search/preview result. Do not invent this."
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true,
+          "description": "Insert parent (default Workspace). Aliases: parent, targetParent"
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for parentPath"
+        },
+        {
+          "name": "targetParent",
+          "type": "string",
+          "optional": true,
+          "description": "Alias for parentPath (import_rbxm/generate_model)"
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "Optional [x,y,z] pivot for models/meshes"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "description": "Optional name for the inserted instance (especially Sounds)"
+        },
+        {
+          "name": "play",
+          "type": "boolean",
+          "optional": true,
+          "description": "If true and the insert is audio, play the Sound once"
+        },
+        {
+          "name": "sourcePath",
+          "type": "string",
+          "optional": true,
+          "description": "Instance path for export_path_rbxm / review_model / upload_asset"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "optional": true,
+          "description": "Library category folder for export/import/review/thumbnail (default 'models')"
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "optional": true,
+          "description": "Library asset display name"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true,
+          "description": "Library asset description"
+        },
+        {
+          "name": "includeProperties",
+          "type": "boolean",
+          "optional": true,
+          "description": "export_selection_json: include common properties (default true)"
+        },
+        {
+          "name": "includeChildren",
+          "type": "boolean",
+          "optional": true,
+          "description": "export_selection_json: include children (default true)"
+        },
+        {
+          "name": "maxDepth",
+          "type": "number",
+          "optional": true,
+          "description": "Export child depth (default 10)"
+        },
+        {
+          "name": "assetLibraryAssetId",
+          "type": "string",
+          "optional": true,
+          "description": "Local library asset id from an export action (import_rbxm / generate_thumbnail)"
+        },
+        {
+          "name": "exportToLibrary",
+          "type": "boolean",
+          "optional": true,
+          "description": "review_model: also save to the library when review passes"
+        },
+        {
+          "name": "expectedUse",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "decorative",
+            "interactive",
+            "vehicle",
+            "character",
+            "unknown"
+          ]
+        },
+        {
+          "name": "expectedGroups",
+          "type": "string[]",
+          "optional": true,
+          "description": "review_model: child names that must exist"
+        },
+        {
+          "name": "maxDescendants",
+          "type": "number",
+          "optional": true,
+          "description": "review_model descendant budget (default 500)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "optional": true,
+          "description": "generate_model: text prompt for Roblox GenerationService"
+        },
+        {
+          "name": "confirm",
+          "type": "boolean",
+          "optional": true,
+          "description": "upload_asset: must be true to actually upload to Roblox"
+        }
+      ]
+    },
+    {
+      "name": "manage_input",
+      "description": "Simulate input. In playtest: walk_to (Humanoid:MoveTo a path/position), click_world (VirtualInput at a 3D instance screen pos), walk_and_click (walk then click — use this to verify world clicks like crates), click_at (viewport pixels), click_path (PlayerGui GuiButton), key, type_text. Clicks use UserInputService:CreateVirtualInput, not VirtualInputManager. In edit: click_path uses VirtualInput plus a LastClick attribute on the ScreenGui.",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "click_at",
+        "click_path",
+        "key",
+        "type_text",
+        "walk_to",
+        "click_world",
+        "walk_and_click"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "click_at",
+            "click_path",
+            "key",
+            "type_text",
+            "walk_to",
+            "click_world",
+            "walk_and_click"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "3D instance (walk_to/click_world) or GuiButton (click_path)"
+        },
+        {
+          "name": "position",
+          "type": "number[]",
+          "optional": true,
+          "description": "Optional [x,y,z] walk target if path is omitted"
+        },
+        {
+          "name": "standOff",
+          "type": "number",
+          "optional": true,
+          "description": "How far to stand from the target when walking (default 4)"
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "optional": true,
+          "description": "Walk timeout seconds (default 8)"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": true,
+          "description": "Enum.KeyCode name, e.g. E, Space, W"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "manage_logs",
+      "description": "Read the Roblox Studio output log (captured by the plugin via LogService; play-mode logs come from the play agent). Actions: get (recent entries, optional levelFilter: Print/Warning/Error, containsFilter, since unix-seconds cursor), errors (Error-level only), clear.",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "get",
+        "errors",
+        "clear"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "errors",
+            "clear"
+          ]
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "optional": true,
+          "description": "Max entries (default 100)"
+        },
+        {
+          "name": "levelFilter",
+          "type": "string",
+          "optional": true,
+          "description": "Print, Warning, or Error"
+        },
+        {
+          "name": "containsFilter",
+          "type": "string",
+          "optional": true,
+          "description": "Only entries containing this substring"
+        },
+        {
+          "name": "since",
+          "type": "number",
+          "optional": true,
+          "description": "Only entries at/after this unix timestamp in seconds"
+        }
+      ]
+    },
+    {
+      "name": "manage_selection",
+      "description": "Get or set the Studio selection. Actions: get, set (paths array), add, remove, clear, details (selection + common properties, optional maxDepth descendants + includeAncestors), cached (last known selection without a Studio round-trip; maxAge ms), context (selection with script source, properties, and children), watch (install a selection-change watcher; call again to collect changes).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "get",
+        "set",
+        "add",
+        "remove",
+        "clear",
+        "details",
+        "cached",
+        "context",
+        "watch"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get",
+            "set",
+            "add",
+            "remove",
+            "clear",
+            "details",
+            "cached",
+            "context",
+            "watch"
+          ]
+        },
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": true
+        },
+        {
+          "name": "maxAge",
+          "type": "number",
+          "optional": true,
+          "description": "cached: max cache age in ms (default 30000, 0 = any age)"
+        },
+        {
+          "name": "maxDepth",
+          "type": "number",
+          "optional": true,
+          "description": "details: descendant depth (default 1)"
+        },
+        {
+          "name": "includeAncestors",
+          "type": "boolean",
+          "optional": true,
+          "description": "details: include ancestor chain"
+        },
+        {
+          "name": "includeSource",
+          "type": "boolean",
+          "optional": true,
+          "description": "context: include script sources (default true)"
+        },
+        {
+          "name": "includeProperties",
+          "type": "boolean",
+          "optional": true,
+          "description": "context: include common properties (default true)"
+        },
+        {
+          "name": "includeChildren",
+          "type": "boolean",
+          "optional": true,
+          "description": "context: include immediate children (default false)"
+        }
+      ]
+    },
+    {
+      "name": "manage_studio",
+      "description": "Studio-level operations. Actions: get_mode, play_status, play_start (F5 Play or F8 Run), play_stop, play_pause, play_resume, run_test (inject Luau, play, collect [ROBRIDGE_TEST] logs, stop, write report; auto-records a short viewport clip unless record=false), toggle_ui_preview (StarterGui.ShowDevelopmentGui), test_profile_get/set/reset (Player Emulator — no public API; returns manual_required with instructions), experience_language_get (locale info) / experience_language_set (manual_required), undo, redo, set_waypoint, save_prompt. After adding a player-facing feature (UI, clicks, shop, movement, leaderstats), playtest with run_test or play_start before reporting done. Prefer run_test over manually sequencing play_start + logs + play_stop. Viewport clips: manage_camera.record, or run_test (attaches clip metadata).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "get_mode",
+        "play_status",
+        "play_start",
+        "play_stop",
+        "play_pause",
+        "play_resume",
+        "run_test",
+        "toggle_ui_preview",
+        "test_profile_get",
+        "test_profile_set",
+        "test_profile_reset",
+        "experience_language_get",
+        "experience_language_set",
+        "undo",
+        "redo",
+        "set_waypoint",
+        "save_prompt"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "get_mode",
+            "play_status",
+            "play_start",
+            "play_stop",
+            "play_pause",
+            "play_resume",
+            "run_test",
+            "toggle_ui_preview",
+            "test_profile_get",
+            "test_profile_set",
+            "test_profile_reset",
+            "experience_language_get",
+            "experience_language_set",
+            "undo",
+            "redo",
+            "set_waypoint",
+            "save_prompt"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "play",
+            "run"
+          ],
+          "description": "play_start / run_test mode: play (F5) or run (F8)"
+        },
+        {
+          "name": "script",
+          "type": "string",
+          "optional": true,
+          "description": "Luau test body for run_test"
+        },
+        {
+          "name": "test_name",
+          "type": "string",
+          "optional": true,
+          "description": "Display name for run_test"
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "optional": true,
+          "description": "run_test timeout in seconds (default 60, max 300)"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "optional": true,
+          "description": "toggle_ui_preview: explicit value; omit to toggle"
+        },
+        {
+          "name": "testProfile",
+          "type": "object",
+          "optional": true,
+          "description": "test_profile_set: Player Emulator profile patch"
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "optional": true,
+          "description": "experience_language_set: locale id, e.g. en-us"
+        },
+        {
+          "name": "testSource",
+          "type": "string",
+          "optional": true,
+          "description": "play_start: optional run_test script injected with play agents (not saved)"
+        },
+        {
+          "name": "testName",
+          "type": "string",
+          "optional": true,
+          "description": "play_start: name for testSource script (default t0)"
+        },
+        {
+          "name": "record",
+          "type": "boolean",
+          "optional": true,
+          "description": "run_test: attach a viewport clip (default true)"
+        },
+        {
+          "name": "recordSeconds",
+          "type": "number",
+          "optional": true,
+          "description": "run_test / record duration in seconds (default 4)"
+        },
+        {
+          "name": "recordPath",
+          "type": "string",
+          "optional": true,
+          "description": "run_test: optional instance to focus while recording"
+        }
+      ]
+    },
+    {
+      "name": "manage_sync",
+      "description": "Sync between Studio and the local filesystem. Actions: export_scripts (dump every script source under a path to ./sync/<place>/ on disk), status / status_current_place (place + sync dir + last export), history (recent sync operations), directions (get or set per-type sync directions), read_file (read a synced script file by instancePath), write_file (write content to the synced file AND apply it to the Studio script), progress (last export stats).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "export_scripts",
+        "status",
+        "status_current_place",
+        "history",
+        "directions",
+        "read_file",
+        "write_file",
+        "progress"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "export_scripts",
+            "status",
+            "status_current_place",
+            "history",
+            "directions",
+            "read_file",
+            "write_file",
+            "progress"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Root to export from (default game)"
+        },
+        {
+          "name": "outDir",
+          "type": "string",
+          "optional": true,
+          "description": "Output directory (default ./sync)"
+        },
+        {
+          "name": "instancePath",
+          "type": "string",
+          "optional": true,
+          "description": "Script instance path for read_file/write_file, e.g. game.ServerScriptService.Main"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "optional": true,
+          "description": "New file content for write_file"
+        },
+        {
+          "name": "directions",
+          "type": "object",
+          "optional": true,
+          "description": "directions: set map, e.g. {scripts: 'studio_to_file'}"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "optional": true,
+          "description": "history: max entries (default 50)"
+        }
+      ]
+    },
+    {
+      "name": "system_info",
+      "description": "RoBridge + Studio status. No action (or action=info) returns the full snapshot. Actions: ping (latency), connection (edit/play sessions), place_info, services (DataModel services), usage (per-tool call statistics for this server session), preflight (read-only Studio diagnostics: mode, publish status, HttpService, loadstring, Mesh/Image APIs — with fix instructions).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "info",
+        "ping",
+        "connection",
+        "place_info",
+        "services",
+        "usage",
+        "preflight"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "info",
+            "ping",
+            "connection",
+            "place_info",
+            "services",
+            "usage",
+            "preflight"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "workspace_state",
+      "description": "Snapshot of the place. Actions: summary (place info, top-level services, selection, camera), counts (instance counts by ClassName under a path), sync (hierarchy outline + metadata + change stats), snapshot (instance tree under a path, maxDepth), changes (recent added/removed instances — installs a watcher on first call), clear_history (reset the change log), viewport (camera + viewport size + selection bounds), metadata (place ids, counts, timestamps), scripts (all script paths with line counts), selection_info (selection with bounds), clear_cache (drop watchers and cached plugin state).",
+      "file": "studio.ts",
+      "group": "Studio",
+      "groupOrder": 3,
+      "actions": [
+        "summary",
+        "counts",
+        "sync",
+        "snapshot",
+        "changes",
+        "clear_history",
+        "viewport",
+        "metadata",
+        "scripts",
+        "selection_info",
+        "clear_cache"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "summary",
+            "counts",
+            "sync",
+            "snapshot",
+            "changes",
+            "clear_history",
+            "viewport",
+            "metadata",
+            "scripts",
+            "selection_info",
+            "clear_cache"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "topN",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxDepth",
+          "type": "number",
+          "optional": true,
+          "description": "snapshot depth (default 4)"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "optional": true,
+          "description": "changes: max events returned (default 20)"
+        },
+        {
+          "name": "includeMetadata",
+          "type": "boolean",
+          "optional": true,
+          "description": "sync: include metadata block (default true)"
+        },
+        {
+          "name": "includeCameraInfo",
+          "type": "boolean",
+          "optional": true,
+          "description": "viewport: include camera (default true)"
+        },
+        {
+          "name": "includeSelectionBounds",
+          "type": "boolean",
+          "optional": true,
+          "description": "viewport: include selection bounds (default true)"
+        }
+      ]
+    },
+    {
+      "name": "manage_animation",
+      "description": "Manage animations. Actions: create (Animation with animationId — do not invent IDs), list, load (load onto a rig without playing), play, stop, stop_all, get_tracks (tracks on a rig). Prefer user-provided or search-accepted animation IDs.",
+      "file": "media.ts",
+      "group": "Media",
+      "groupOrder": 4,
+      "actions": [
+        "create",
+        "list",
+        "load",
+        "play",
+        "stop",
+        "stop_all",
+        "get_tracks"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "create",
+            "list",
+            "load",
+            "play",
+            "stop",
+            "stop_all",
+            "get_tracks"
+          ]
+        },
+        {
+          "name": "animationId",
+          "type": "union",
+          "optional": true
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true,
+          "description": "Animation instance path for play"
+        },
+        {
+          "name": "rigPath",
+          "type": "string",
+          "optional": true,
+          "description": "Model with Humanoid or AnimationController"
+        }
+      ]
+    },
+    {
+      "name": "manage_audio",
+      "description": "Manage Sound instances. Actions: create (soundId number or 'rbxassetid://...' — do not invent IDs), play, pause, resume, stop, stop_all, list, set, set_listener (SoundService listener: Camera, CFrame, ObjectPosition, or ObjectCFrame). Prefer user-provided or search-accepted asset IDs.",
+      "file": "media.ts",
+      "group": "Media",
+      "groupOrder": 4,
+      "actions": [
+        "create",
+        "play",
+        "pause",
+        "resume",
+        "stop",
+        "stop_all",
+        "list",
+        "set",
+        "set_listener"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "create",
+            "play",
+            "pause",
+            "resume",
+            "stop",
+            "stop_all",
+            "list",
+            "set",
+            "set_listener"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "soundId",
+          "type": "union",
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "listenerType",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "Camera",
+            "CFrame",
+            "ObjectPosition",
+            "ObjectCFrame"
+          ],
+          "description": "For set_listener (default Camera)"
+        },
+        {
+          "name": "listenerPath",
+          "type": "string",
+          "optional": true,
+          "description": "Instance path for ObjectPosition/ObjectCFrame listener"
+        },
+        {
+          "name": "cframe",
+          "type": "number[]",
+          "optional": true,
+          "description": "[x,y,z] for CFrame listener"
+        }
+      ]
+    },
+    {
+      "name": "manage_tween",
+      "description": "Animate properties with TweenService (plays live in the Studio viewport). Actions: create (build a tween without playing; returns tweenId), play (tweenId from create, or path+goal to create-and-play), pause, resume, cancel/stop_all. pause/resume/cancel accept tweenId or affect all tracked tweens. goal/properties map e.g. {\"Position\": [0,10,0], \"Transparency\": 0.5}.",
+      "file": "media.ts",
+      "group": "Media",
+      "groupOrder": 4,
+      "actions": [
+        "create",
+        "play",
+        "pause",
+        "resume",
+        "cancel",
+        "stop_all"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "create",
+            "play",
+            "pause",
+            "resume",
+            "cancel",
+            "stop_all"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "goal",
+          "type": "object",
+          "optional": true,
+          "description": "Property goal map. Alias: properties"
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true,
+          "description": "Alias for goal"
+        },
+        {
+          "name": "tweenId",
+          "type": "string",
+          "optional": true,
+          "description": "Tween id returned by create; targets one tween for play/pause/resume/cancel"
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "easingStyle",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "easingDirection",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "repeatCount",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "reverses",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "tweenInfo",
+          "type": "boolean",
+          "optional": true,
+          "description": "Alias object for duration/easing fields"
+        }
+      ]
+    },
+    {
+      "name": "manage_ui",
+      "description": "Create, inspect, preview, and interact with Roblox UI. Actions: design_brief (plan a UI from a text brief; set create=true to build it), create_tree, update, list, inspect, list_interactive, preview (clone into CoreGui in Edit), hide_preview, click (VirtualInput / attribute click — PlayerGui during playtest, StarterGui in Edit), type_text, get_abs, check, delete.",
+      "file": "ui.ts",
+      "group": "UI",
+      "groupOrder": 5,
+      "actions": [
+        "design_brief",
+        "create_tree",
+        "update",
+        "list",
+        "inspect",
+        "list_interactive",
+        "preview",
+        "hide_preview",
+        "click",
+        "type_text",
+        "get_abs",
+        "check",
+        "delete"
+      ],
+      "params": [
+        {
+          "name": "action",
+          "type": "enum",
+          "optional": false,
+          "enum": [
+            "design_brief",
+            "create_tree",
+            "update",
+            "list",
+            "inspect",
+            "list_interactive",
+            "preview",
+            "hide_preview",
+            "click",
+            "type_text",
+            "get_abs",
+            "check",
+            "delete"
+          ]
+        },
+        {
+          "name": "parentPath",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "screenGuiName",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "tree",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "properties",
+          "type": "object",
+          "optional": true
+        },
+        {
+          "name": "depth",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "brief",
+          "type": "string",
+          "optional": true,
+          "description": "Natural-language UI brief for design_brief"
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "optional": true,
+          "enum": [
+            "hud",
+            "menu",
+            "shop",
+            "inventory",
+            "dialog",
+            "settings",
+            "custom"
+          ]
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": true,
+          "description": "Text for type_text"
+        },
+        {
+          "name": "create",
+          "type": "boolean",
+          "optional": true,
+          "description": "If true, design_brief also creates the tree"
+        }
+      ]
+    },
+    {
+      "name": "batch_execute",
+      "description": "Run several RoBridge tool calls in one request as a single undo waypoint. Each command is {tool, args}. Stops on first error unless continueOnError is true (stopOnError is the inverse alias). Nested batch_execute is rejected. Prefer this over many round-trips for related mutations.",
+      "file": "execute.ts",
+      "group": "Execute",
+      "groupOrder": 6,
+      "actions": [],
+      "params": [
+        {
+          "name": "commands",
+          "type": "object",
+          "optional": true,
+          "description": "Ordered list of tool calls"
+        },
+        {
+          "name": "continueOnError",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "stopOnError",
+          "type": "boolean",
+          "optional": true,
+          "description": "Alias (default true). Inverse of continueOnError."
+        },
+        {
+          "name": "waypoint",
+          "type": "string",
+          "optional": true,
+          "description": "ChangeHistoryService waypoint name for the batch"
+        }
+      ]
+    },
+    {
+      "name": "execute_luau",
+      "description": "Run arbitrary Luau code in Roblox Studio (plugin security level, Edit-only). During Play use manage_studio.run_test / play agents instead — plugin loadstring is unavailable in Play. The code may `return` a value, which is JSON-encoded (Instances become path strings, Roblox types become typed tables). A helper table `RB` is available with RB.resolve(path or rbId), RB.encode(value), RB.summary(instance) (includes rbId), RB.setProp(instance, name, value), RB.stripIds().",
+      "file": "execute.ts",
+      "group": "Execute",
+      "groupOrder": 6,
+      "actions": [],
+      "params": [
+        {
+          "name": "code",
+          "type": "string",
+          "optional": false,
+          "description": "Luau source to run"
+        },
+        {
+          "name": "timeoutSeconds",
+          "type": "number",
+          "optional": true,
+          "description": "Max wait (default 30)"
+        }
+      ]
+    }
+  ]
+}

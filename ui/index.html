@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoBridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3 4.5h5.2L4.8 13.5H3L3 4.5zm6.8 0H15v2.1H11.4l-1.1 2.7H15v2.1H9.6L6.8 4.5h3z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">RoBridge</div>
+        <div class="brand-sub" id="version">v0.0.0</div>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-item active" data-tab="overview">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="3" width="6" height="6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="11" width="6" height="6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="11" width="6" height="6" rx="1.4" stroke="currentColor" stroke-width="1.6"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" data-tab="tools">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 6.5h12M4 10h12M4 13.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Activity
+      </button>
+      <button class="nav-item" data-tab="ui-studio">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3.5" y="4" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 8h13" stroke="currentColor" stroke-width="1.6"/></svg>
+        UI Studio
+      </button>
+      <button class="nav-item" data-tab="console">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5 8 10.5 5 13.5M10 13.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Console
+      </button>
+      <button class="nav-item" data-tab="logs">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5.5h10M5 10h10M5 14.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Logs
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="conn-stack">
+        <div class="conn-pill" id="conn-pill">
+          <span class="dot" id="conn-dot"></span>
+          <span id="conn-text">Connecting…</span>
+        </div>
+        <div class="conn-pill play" id="play-pill">
+          <span class="dot" id="play-dot"></span>
+          <span id="play-text">Edit mode</span>
+        </div>
+      </div>
+      <div class="free-badge">All tools free · no Pro tier</div>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-place">
+        <span class="topbar-kicker">Place</span>
+        <strong id="top-place">—</strong>
+      </div>
+      <div class="topbar-meta">
+        <span class="mode-badge" id="top-mode">offline</span>
+        <span class="topbar-sep"></span>
+        <span id="top-port">:3737</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="tab active" id="tab-overview">
+        <div class="page-head">
+          <div>
+            <h1>Overview</h1>
+            <p class="subtitle">Live path from the MCP client through this server into Studio plugin sessions and the open place.</p>
+          </div>
+          <div class="page-actions">
+            <div class="version-pair">
+              <span>Server <strong id="ov-server-ver">—</strong></span>
+              <span>Plugin <strong id="ov-plugin-ver">—</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topology" id="topology" aria-label="Connection topology"></div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">Uptime</div>
+            <div class="card-value" id="ov-uptime">—</div>
+            <div class="card-hint">Port <span id="ov-port">—</span></div>
+          </div>
+          <div class="card">
+            <div class="card-label">Sessions</div>
+            <div class="card-value" id="ov-studio">—</div>
+            <div class="card-hint" id="ov-studio-hint">Waiting for plugin</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Tool calls</div>
+            <div class="card-value" id="ov-calls">—</div>
+            <div class="card-hint" id="ov-calls-hint">This server process</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Registry</div>
+            <div class="card-value" id="ov-tools">—</div>
+            <div class="card-hint" id="ov-tools-hint">Typed actions, all free</div>
+          </div>
+        </div>
+
+        <div class="checks" id="preflight-row"></div>
+
+        <div class="section-head">
+          <h2>Studio sessions</h2>
+          <span class="section-note" id="session-count-note"></span>
+        </div>
+        <div class="session-list" id="session-cards"></div>
+        <div class="empty-state" id="sessions-empty">
+          <strong>No Studio connected</strong>
+          <span>Open Roblox Studio with the RoBridge plugin and click the toolbar button. Multiple Studios (Team Create) each appear as their own session.</span>
+        </div>
+
+        <div class="section-head">
+          <h2>Tool registry</h2>
+          <span class="section-note" id="tool-count-note"></span>
+        </div>
+        <p class="registry-lead">Typed actions from the live <code>defineTool</code> schemas this server registered — not the Cursor catalog cache.</p>
+        <div class="registry-toolbar">
+          <input type="search" id="registry-search" placeholder="Search tools, actions, genres…" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="registry" id="tool-registry"></div>
+      </section>
+
+      <section class="tab" id="tab-tools">
+        <div class="page-head">
+          <div>
+            <h1>Activity</h1>
+            <p class="subtitle">Every MCP and dashboard tool call, with timings and failures.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn ghost" id="toggle-stats">Statistics</button>
+            <button class="btn danger" id="clear-history">Clear</button>
+          </div>
+        </div>
+        <div id="history-view">
+          <div class="panel">
+            <table class="table" id="history-table">
+              <thead><tr><th>Time</th><th>Tool · Action</th><th>Duration</th><th>Status</th><th>Error</th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <div class="empty-state" id="history-empty">
+              <strong>No tool calls yet</strong>
+              <span>Calls from Cursor, the console, and this dashboard appear here.</span>
+            </div>
+          </div>
+        </div>
+        <div id="stats-view" hidden>
+          <div class="panel">
+            <table class="table" id="stats-table">
+              <thead><tr><th>Tool</th><th>Calls</th><th>OK</th><th>Failed</th><th>No Studio</th><th>Avg</th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <div class="empty-state" id="stats-empty">
+              <strong>No stats yet</strong>
+              <span>Run tools from an agent or this dashboard to populate usage.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-ui-studio">
+        <div class="page-head">
+          <div>
+            <h1>UI Studio</h1>
+            <p class="subtitle">Create ScreenGuis, capture stills or viewport clips, press Play, and click PlayerGui.</p>
+          </div>
+        </div>
+
+        <div class="studio-toolbar">
+          <input id="shot-path" type="text" placeholder="Focus path · StarterGui.RoBridgeMenu" />
+          <button class="btn primary" id="shot-capture">Capture</button>
+          <button class="btn primary" id="shot-record">Record</button>
+          <button class="btn ghost" id="shot-refresh-ui">List GUIs</button>
+          <span class="toolbar-sep"></span>
+          <button class="btn play" id="ui-play">Play</button>
+          <button class="btn ghost" id="ui-stop">Stop</button>
+          <button class="btn danger" id="shot-clear">Clear shots</button>
+        </div>
+
+        <div class="ui-studio-layout">
+          <div class="viewport-frame">
+            <div class="viewport-meta" id="shot-meta">No capture yet</div>
+            <img id="shot-image" alt="Studio viewport" hidden />
+            <video id="shot-video" controls muted loop playsinline hidden></video>
+            <div class="empty-state viewport-empty" id="shot-empty">
+              <strong>Viewport idle</strong>
+              <span>Capture a still or record a short viewport clip with CaptureService, even if Studio is in the background.</span>
+            </div>
+          </div>
+
+          <aside class="ui-side">
+            <details class="inspector" open>
+              <summary>Create UI</summary>
+              <div class="inspector-body">
+                <select id="ui-kind">
+                  <option value="menu">Menu</option>
+                  <option value="hud">HUD</option>
+                  <option value="shop">Shop</option>
+                  <option value="inventory">Inventory</option>
+                  <option value="dialog">Dialog</option>
+                  <option value="settings">Settings</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <input id="ui-brief" type="text" placeholder="Brief · pause menu with resume" />
+                <button class="btn primary wide" id="ui-create">Create from brief</button>
+              </div>
+            </details>
+
+            <details class="inspector" open>
+              <summary>Interactive</summary>
+              <div class="inspector-body">
+                <input id="ui-click-path" type="text" placeholder="Path to click" />
+                <button class="btn primary wide" id="ui-click">Click button</button>
+                <div id="ui-interactive" class="ui-tree"></div>
+              </div>
+            </details>
+
+            <details class="inspector" open>
+              <summary>ScreenGuis</summary>
+              <div class="inspector-body">
+                <div id="ui-tree" class="ui-tree"></div>
+                <div class="empty" id="ui-tree-empty">List ScreenGuis to inspect StarterGui.</div>
+              </div>
+            </details>
+
+            <details class="inspector">
+              <summary>Captures</summary>
+              <div class="inspector-body">
+                <div class="shot-thumbs" id="shot-thumbs"></div>
+                <div class="empty" id="shot-thumbs-empty">None yet.</div>
+              </div>
+            </details>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-console">
+        <div class="page-head">
+          <div>
+            <h1>Luau console</h1>
+            <p class="subtitle">Runs at plugin security. <code>RB</code> helpers are in scope.</p>
+          </div>
+          <div class="page-actions">
+            <span class="hint">⌘ / Ctrl + Enter</span>
+            <button class="btn primary" id="console-run">Run in Studio</button>
+          </div>
+        </div>
+        <div class="console-split">
+          <textarea id="console-input" spellcheck="false" placeholder="return workspace:GetChildren()[1]:GetFullName()">return #game:GetDescendants() .. " instances in " .. game.Name</textarea>
+          <pre id="console-output" class="output">Ready. Results from Studio appear here.</pre>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-logs">
+        <div class="page-head">
+          <div>
+            <h1>Studio logs</h1>
+            <p class="subtitle">Output from the connected session. During play, this reads the play agent.</p>
+          </div>
+          <div class="page-actions">
+            <div class="filter-row" id="log-filters">
+              <button class="chip-btn active" data-level="">All</button>
+              <button class="chip-btn" data-level="Print">Print</button>
+              <button class="chip-btn" data-level="Warning">Warning</button>
+              <button class="chip-btn" data-level="Error">Error</button>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="logs-live" />
+              Live
+            </label>
+            <button class="btn primary" id="fetch-logs">Fetch</button>
+          </div>
+        </div>
+        <div class="panel logs-panel">
+          <div id="logs-list" class="logs"></div>
+          <div class="empty-state" id="logs-empty">
+            <strong>No log lines</strong>
+            <span>Fetch the Studio output window, or enable Live to poll every 3s.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

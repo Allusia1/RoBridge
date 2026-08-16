@@ -1,0 +1,37 @@
+---
+description: How to drive Roblox Studio through RoBridge MCP — typed tools, playtest new features, never invent asset IDs
+alwaysApply: true
+---
+
+# RoBridge tool use
+
+The MCP schemas are the catalog. Do not recopy actions into chat or extra docs. Call the tools.
+
+## Prefer typed tools
+
+- Instances, properties, scripts, UI, lighting, terrain, camera, assets, play — use the matching tool.
+- `execute_luau` is last resort when no typed action fits.
+- Related mutations go in one `batch_execute`, not many round-trips.
+
+## Assets
+
+- `manage_assets` search first, then insert an `assetId` from those results.
+- Never invent or hardcode `rbxassetid` values (sounds, animations, skyboxes, models).
+
+## Playtest new features
+
+If the change is something a player can see or use in Play, playtest it before you say it works. Skip playtest for docs, dashboard CSS, rules, or schema-only edits.
+
+1. Prefer `manage_studio` `run_test` with a short Luau body that prints `[ROBRIDGE_TEST] PASS` or `FAIL`.
+2. World objects (crates, parts, clickables): `manage_input` `walk_and_click`.
+3. Screen / PlayerGui buttons: `manage_ui` `click` (or `manage_input` `click_path`).
+4. Read `manage_logs`. If it fails, fix once and retest.
+5. `play_stop` when you are done. Do not leave Play running.
+6. Tell the user what you tested and whether it passed.
+
+Do not hand-roll play_start + logs + play_stop when `run_test` fits.
+
+## Studio
+
+- If a call says no Studio session, stop and say so. Do not fake results.
+- Keep the crate place clean unless the user asks to add more world content.

@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Bridge } from "./bridge.js";
+import { History } from "./history.js";
+import { createHttpApp } from "./server.js";
+import { catalogPayload, type ToolContext } from "./tools/helpers.js";
+import { registerCoreTools } from "./tools/core.js";
+import { registerSceneTools } from "./tools/scene.js";
+import { registerMediaTools } from "./tools/media.js";
+import { registerUiTools } from "./tools/ui.js";
+import { registerStudioTools } from "./tools/studio.js";
+import { registerExecuteTools } from "./tools/execute.js";
+
+const VERSION = "0.1.6";
+const PORT = Number(process.env.ROBRIDGE_PORT ?? 3737);
+const NO_MCP = process.argv.includes("--no-mcp"); // run HTTP-only (dashboard/bridge without an agent)
+const DUMP_CATALOG = process.argv.includes("--dump-catalog");
+
+// stdout is reserved for the MCP protocol; log to stderr only.
+const log = (...args: unknown[]) => console.error("[RoBridge]", ...args);
+
+async function main() {
+  const bridge = new Bridge();
+  const history = new History();
+  const server = new McpServer({ name: "RoBridge", version: VERSION });
+
+  const ctx: ToolContext = {
+    server,
+    bridge,
+    history,
+    registry: new Map(),
+    actions: new Map(),
+    catalog: new Map(),
+    config: {
+      port: PORT,
+      version: VERSION,
+      startedAt: Date.now(),
+      httpBound: false,
+      mcp: {
+        transport: NO_MCP ? "none" : "stdio",
+        stdioConnected: false,
+        lastClientAt: null,
+        lastClientSource: null,
+        proxyCalls: 0,
+      },
+    },
+  };
+
+  registerCoreTools(ctx);
+  registerSceneTools(ctx);
+  registerMediaTools(ctx);
+  registerUiTools(ctx);
+  registerStudioTools(ctx);
+  registerExecuteTools(ctx);
+
+  if (DUMP_CATALOG) {
+    process.stdout.write(JSON.stringify(catalogPayload(ctx), null, 2) + "\n");
+    process.exit(0);
+  }
+
+  const app = createHttpApp(ctx, bridge, history);
+  await new Promise<void>((resolve) => {
+    const httpServer = app.listen(PORT, "127.0.0.1", () => {
+      ctx.config.httpBound = true;
+      log(`Dashboard + Studio bridge listening on http://127.0.0.1:${PORT}`);
+      resolve();
+    });
+    httpServer.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        log(`Port ${PORT} is already in use — forwarding MCP tools to that instance.`);
+        resolve();
+      } else {
+        log("HTTP server error:", err.message);
+        resolve();
+      }
+    });
+  });
+
+  if (!NO_MCP) {
+    await server.connect(new StdioServerTransport());
+    ctx.config.mcp.stdioConnected = true;
+    ctx.config.mcp.lastClientAt = Date.now();
+    ctx.config.mcp.lastClientSource = "stdio";
+    server.sendToolListChanged();
+    log(`MCP server connected via stdio (${ctx.registry.size} tools)`);
+  } else {
+    log("Running in HTTP-only mode (--no-mcp)");
+  }
+}
+
+main().catch((err) => {
+  console.error("[RoBridge] Fatal:", err);
+  process.exit(1);
+});
